@@ -449,3 +449,124 @@
   .gmk-app .gmk-meta { grid-template-columns: repeat(2, 1fr); }
   .gmk-app .gmk-board-frame { padding: 8px; }
 }
+
+/* ---- Settings row (AI speed + sound) ---- */
+.gmk-app .gmk-settings-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+}
+.gmk-app .gmk-settings-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--gmk-shell-border);
+  border-radius: 12px;
+  padding: 6px 10px;
+}
+.gmk-app .gmk-settings-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gmk-text-muted);
+  font-weight: 600;
+}
+
+/* ---- Segmented control (used by AI speed) ---- */
+.gmk-app .gmk-segmented {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.gmk-app .gmk-segmented-btn {
+  appearance: none;
+  background: transparent;
+  color: var(--gmk-text-muted);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.gmk-app .gmk-segmented-btn:hover { color: var(--gmk-text); }
+.gmk-app .gmk-segmented-active {
+  background: var(--gmk-accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 138, 214, 0.32);
+}
+
+/* ---- Sound toggle ---- */
+.gmk-app .gmk-sound-btn {
+  appearance: none;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--gmk-text-muted);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.gmk-app .gmk-sound-btn:hover { color: var(--gmk-text); }
+.gmk-app .gmk-sound-on {
+  background: var(--gmk-accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 138, 214, 0.32);
+}
+.gmk-app .gmk-sound-label { font-size: 12px; }
+
+/* ---- Confirm dialog ---- */
+.gmk-app .gmk-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 14, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: gmk-overlay-fade 0.15s ease-out;
+}
+.gmk-app .gmk-confirm-card {
+  background: rgba(20, 18, 14, 0.97);
+  border: 1px solid var(--gmk-shell-border);
+  border-radius: 14px;
+  padding: 18px 22px;
+  max-width: 380px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.gmk-app .gmk-confirm-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.gmk-app .gmk-confirm-msg {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gmk-text-muted);
+  line-height: 1.45;
+}
+.gmk-app .gmk-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+}

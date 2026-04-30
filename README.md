@@ -35,6 +35,11 @@ A minimal, type-safe **Gomoku** (Five in a Row) on a **15 × 15 goban**, built w
 - ⏱️ **Real-time round timer** (`mm:ss`) that pauses on win or draw
 - 🏆 **Persistent best streak** in `localStorage` (`gomoku.highScore`) across refreshes and modes
 - 🎯 **Last-move marker** — small accent dot on the most recently placed piece, so replays and observation are easy
+- ⚡ **AI speed slider** — Instant / Fast / Normal / Slow, persisted across refreshes
+- 🏆 **Per-mode best streaks** — Easy / Medium / Hard / PvP each track their own all-time record
+- 🔄 **Loser-goes-first** — the previous round's loser opens the next round (drops on draw or first round to strict alternation)
+- 🔔 **Optional sound** — procedural Web Audio click / win / draw cues, off by default
+- 🛡️ **Esc confirmation** — Esc opens a confirmation dialog before clearing scores; **Shift+Esc** skips it
 - ⌨️ **Keyboard-first** — arrows + WASD to move focus, Enter/Space to place, R for new round, T to toggle icons, 1–4 to jump modes
 - ✨ **CSS-only animations** — stone pop on placement, animated SVG strikethrough on the winning line, last-move fade-in
 - 🧼 **Pure game logic** separated from UI — `src/logic/*` and `src/hooks/*` never import from `components/`
@@ -119,7 +124,8 @@ npm run preview
 | **N**                          | Cycle through modes (PvP → Easy → …)    |
 | **1** / **2** / **3** / **4**  | Jump to PvP / Easy / Medium / Hard      |
 | **T**                          | Toggle icon style (Stones ↔ Teeth)      |
-| **Esc**                        | Reset session scores                    |
+| **Esc**                        | Reset session scores (with confirm)     |
+| **Shift + Esc**                | Reset session scores (no confirm)       |
 
 Arrow keys call `preventDefault()` so the page never scrolls during play. Cells are real `<button>` elements with `aria-label`s ("Row 8, column 8, black stone"), so screen readers and `Tab` navigation work natively. Focus clamps at the edges of the 15 × 15 grid — pressing Right on column 15 stays at column 15, no row-wrap.
 

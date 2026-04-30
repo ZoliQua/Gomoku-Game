@@ -2,7 +2,16 @@ import { bestMove } from './ai';
 import { CENTER_INDEX, TOTAL_CELLS } from './constants';
 import { EMPTY_BOARD } from './grid';
 import { checkWinAt, isDraw } from './win';
-import type { Board, Cell, GameAction, GameState, Mode, Rng, Stone } from './types';
+import type {
+  BestStreaks,
+  Board,
+  Cell,
+  GameAction,
+  GameState,
+  Mode,
+  Rng,
+  Stone,
+} from './types';
 
 const opposite = (stone: Stone): Stone => (stone === 'B' ? 'W' : 'B');
 
@@ -17,10 +26,17 @@ const placeAt = (board: Board, index: number, stone: Stone): Board => {
   return next;
 };
 
+export const EMPTY_BEST_STREAKS: BestStreaks = {
+  pvp: 0,
+  easy: 0,
+  medium: 0,
+  hard: 0,
+};
+
 export type CreateInitialOptions = {
   mode?: Mode;
   humanStone?: Stone;
-  bestStreak?: number;
+  bestStreaks?: BestStreaks;
   startingStone?: Stone;
 };
 
@@ -39,7 +55,7 @@ export const createInitialState = (opts: CreateInitialOptions = {}): GameState =
     humanStone,
     startingStone,
     scores: { black: 0, white: 0, draws: 0 },
-    bestStreak: opts.bestStreak ?? 0,
+    bestStreaks: opts.bestStreaks ?? EMPTY_BEST_STREAKS,
     currentStreak: 0,
     moveCount: 0,
     focusIndex: CENTER_INDEX,
@@ -56,7 +72,7 @@ const applyMoveResult = (
     const aiStone = aiStoneFor(state);
     const humanWon =
       aiStone === null
-        ? win.winner === 'B' // PvP: count B (Black) wins toward streak
+        ? win.winner === 'B'
         : win.winner === state.humanStone;
 
     const scores = {
@@ -65,7 +81,10 @@ const applyMoveResult = (
       white: state.scores.white + (win.winner === 'W' ? 1 : 0),
     };
     const currentStreak = humanWon ? state.currentStreak + 1 : 0;
-    const bestStreak = Math.max(state.bestStreak, currentStreak);
+    const prevBest = state.bestStreaks[state.mode];
+    const bestStreaks: BestStreaks = currentStreak > prevBest
+      ? { ...state.bestStreaks, [state.mode]: currentStreak }
+      : state.bestStreaks;
 
     return {
       ...state,
@@ -76,7 +95,7 @@ const applyMoveResult = (
       winningLine: win.line,
       scores,
       currentStreak,
-      bestStreak,
+      bestStreaks,
       moveCount: state.moveCount + 1,
     };
   }
@@ -136,7 +155,11 @@ export const advanceGame = (
     }
 
     case 'newRound': {
-      const nextStarting: Stone = opposite(state.startingStone);
+      // C1 — loser-goes-first: if the previous round had a winner, the
+      // loser opens the next round; on draw or first round, alternate.
+      const nextStarting: Stone = state.winner !== null
+        ? opposite(state.winner)
+        : opposite(state.startingStone);
       return {
         ...state,
         board: EMPTY_BOARD,

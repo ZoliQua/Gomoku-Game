@@ -7,6 +7,7 @@ const opposite = (stone: Stone): Stone => (stone === 'B' ? 'W' : 'B');
 export const useAITurn = (
   state: GameState,
   dispatch: (action: GameAction) => void,
+  delayMs: number = AI_DELAY_MS,
 ): void => {
   useEffect(() => {
     if (state.mode === 'pvp') return;
@@ -16,8 +17,16 @@ export const useAITurn = (
 
     const timer = setTimeout(() => {
       dispatch({ type: 'aiMove' });
-    }, AI_DELAY_MS);
+    }, Math.max(0, delayMs));
 
     return () => clearTimeout(timer);
-  }, [state.mode, state.status, state.current, state.humanStone, state.board, dispatch]);
+  }, [
+    state.mode,
+    state.status,
+    state.current,
+    state.humanStone,
+    state.board,
+    dispatch,
+    delayMs,
+  ]);
 };

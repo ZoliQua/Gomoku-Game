@@ -1,32 +1,25 @@
-import { useCallback, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { AISpeedToggle } from './components/AISpeedToggle';
+import { ConfirmDialog } from './components/ConfirmDialog';
 import { GameBoard } from './components/GameBoard';
 import { GameControls } from './components/GameControls';
 import { IconStyleToggle } from './components/IconStyleToggle';
 import { ModeSelect } from './components/ModeSelect';
 import { Overlay } from './components/Overlay';
 import { ScoreBoard } from './components/ScoreBoard';
+import { SoundToggle } from './components/SoundToggle';
+import { useAIDelay } from './hooks/useAIDelay';
 import { useAITurn } from './hooks/useAITurn';
-import { useBestStreak } from './hooks/useBestStreak';
+import { readBestStreaks, useBestStreaks } from './hooks/useBestStreak';
 import { useElapsedSeconds } from './hooks/useElapsedSeconds';
 import { useIconStyle } from './hooks/useIconStyle';
 import { useKeyboardSelect } from './hooks/useKeyboardSelect';
-import { STORAGE_KEY_BEST } from './logic/constants';
+import { useSound } from './hooks/useSound';
 import { advanceGame, createInitialState } from './logic/game';
 import type { GameAction, GameState, Mode } from './logic/types';
 import './styles/gmk.css';
 
-const readBestStreak = (): number => {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY_BEST);
-    if (raw === null) return 0;
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
-  } catch {
-    return 0;
-  }
-};
-
-const init = (): GameState => createInitialState({ bestStreak: readBestStreak() });
+const init = (): GameState => createInitialState({ bestStreaks: readBestStreaks() });
 
 export const GomokuGame = () => {
   const rngRef = useRef<() => number>(Math.random);
@@ -40,20 +33,64 @@ export const GomokuGame = () => {
 
   const { style: iconStyle, setStyle: setIconStyle, toggle: toggleIconStyle } =
     useIconStyle();
+  const { speed: aiSpeed, delayMs: aiDelay, setSpeed: setAISpeed } = useAIDelay();
+  const sound = useSound();
 
-  const bestStreak = useBestStreak(state.currentStreak);
+  useBestStreaks(state.bestStreaks);
+
   const isHumanTurn = state.mode === 'pvp' || state.current === state.humanStone;
   const roundKey = `${state.mode}-${state.startingStone}-${state.scores.black + state.scores.white + state.scores.draws}`;
   const elapsed = useElapsedSeconds(state.status, roundKey);
 
-  useAITurn(state, dispatch);
-  useKeyboardSelect({ state, dispatch, onToggleIconStyle: toggleIconStyle });
+  // C5 — sound effects on placement and round end.
+  const lastMoveCountRef = useRef(state.moveCount);
+  const lastStatusRef = useRef(state.status);
+  useEffect(() => {
+    if (state.moveCount > lastMoveCountRef.current) {
+      sound.click();
+    }
+    lastMoveCountRef.current = state.moveCount;
+  }, [state.moveCount, sound]);
+
+  useEffect(() => {
+    const prev = lastStatusRef.current;
+    if (prev === 'playing') {
+      if (state.status === 'won') sound.win();
+      else if (state.status === 'draw') sound.draw();
+    }
+    lastStatusRef.current = state.status;
+  }, [state.status, sound]);
+
+  // C4 — Esc confirmation dialog.
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const requestReset = useCallback(() => {
+    const hasScores =
+      state.scores.black > 0 ||
+      state.scores.white > 0 ||
+      state.scores.draws > 0 ||
+      state.currentStreak > 0;
+    if (!hasScores) return;
+    setConfirmResetOpen(true);
+  }, [state.scores.black, state.scores.white, state.scores.draws, state.currentStreak]);
+  const confirmReset = useCallback(() => {
+    dispatch({ type: 'resetScores' });
+    setConfirmResetOpen(false);
+  }, []);
+  const cancelReset = useCallback(() => setConfirmResetOpen(false), []);
+
+  useAITurn(state, dispatch, aiDelay);
+  useKeyboardSelect({
+    state,
+    dispatch,
+    onResetRequested: requestReset,
+    onToggleIconStyle: toggleIconStyle,
+  });
 
   const handleModeChange = (mode: Mode) => dispatch({ type: 'changeMode', mode });
   const handleNewRound = () => dispatch({ type: 'newRound' });
-  const handleResetScores = () => dispatch({ type: 'resetScores' });
+  const handleResetScores = () => requestReset();
 
-  const effectiveBest = Math.max(bestStreak, state.bestStreak);
+  const bestStreakForMode = state.bestStreaks[state.mode];
 
   return (
     <div className="gmk-app" data-mode={state.mode} data-icon-style={iconStyle}>
@@ -77,10 +114,15 @@ export const GomokuGame = () => {
 
         <ModeSelect mode={state.mode} onChange={handleModeChange} />
 
+        <div className="gmk-settings-row">
+          <AISpeedToggle speed={aiSpeed} onChange={setAISpeed} />
+          <SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />
+        </div>
+
         <main className="gmk-main">
           <ScoreBoard
             state={state}
-            bestStreak={effectiveBest}
+            bestStreak={bestStreakForMode}
             elapsedSeconds={elapsed}
             iconStyle={iconStyle}
           />
@@ -112,10 +154,21 @@ export const GomokuGame = () => {
               <kbd className="gmk-kbd">N</kbd> cycle mode ·{' '}
               <kbd className="gmk-kbd">1–4</kbd> jump mode ·{' '}
               <kbd className="gmk-kbd">T</kbd> toggle icons ·{' '}
-              <kbd className="gmk-kbd">Esc</kbd> reset scores
+              <kbd className="gmk-kbd">Esc</kbd> reset scores ·{' '}
+              <kbd className="gmk-kbd">Shift+Esc</kbd> reset (no confirm)
             </p>
           </div>
         </main>
+
+        <ConfirmDialog
+          open={confirmResetOpen}
+          title="Reset session scores?"
+          message="This clears Black / White / draws and your current streak. Your best streak per mode is preserved."
+          confirmLabel="Reset scores"
+          cancelLabel="Keep"
+          onConfirm={confirmReset}
+          onCancel={cancelReset}
+        />
       </div>
     </div>
   );

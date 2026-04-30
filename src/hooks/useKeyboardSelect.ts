@@ -86,6 +86,11 @@ export const useKeyboardSelect = ({
 
       if (key === 'Escape') {
         event.preventDefault();
+        // Shift+Esc bypasses confirm and resets immediately.
+        if (event.shiftKey) {
+          dispatch({ type: 'resetScores' });
+          return;
+        }
         if (onResetRequested) onResetRequested();
         else dispatch({ type: 'resetScores' });
         return;
