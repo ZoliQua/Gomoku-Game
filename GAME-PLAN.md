@@ -508,18 +508,22 @@ The two `❌` rows are the only manual changes integration day. Everything else 
 
 ## ❓ Open questions
 
+> Resolved in v1.1 (commits `add Gomoku Five-in-a-Row …` + `add C1–C5 feature pack`):
+> - ✅ **Stone style toggle (TTT-inspired)** — Stones ↔ Teeth, persisted under `gomoku.iconStyle`.
+> - ✅ **Loser-goes-first** — implemented; falls back to strict alternation on draw / first round.
+> - ✅ **Best-streak per mode** — `state.bestStreaks: { pvp, easy, medium, hard }`, persisted under `gomoku.highScore.{mode}`.
+> - ✅ **AI delay configurability** — `AISpeedToggle` segmented control (Instant / Fast / Normal / Slow), persisted in `localStorage`.
+> - ✅ **Esc confirmation modal** — `ConfirmDialog` on Esc; `Shift+Esc` bypasses.
+> - ✅ **Sound** — procedural Web Audio click / win / draw (low square-wave "tock" for placement to fit the goban aesthetic), `SoundToggle`, off by default.
+
+Still open:
+
 * **Board size**: lock 15×15 in v1 (current plan), or ship a 13×13 / 15×15 / 19×19 selector? 13×13 makes Hard AI feasibly stronger; 19×19 is more "go-flavoured" but slower to render and search.
 * **Renju forbidden moves for Black**: currently free Gomoku (Black wins with perfect play). Implement the three Renju forbidden patterns (overline, double-four, double-three) for Black as a v1.1 toggle to balance the game?
 * **Overline handling**: in free mode v1, a 6-in-a-row by either side counts as a win. Some rule sets count it for White but not for Black. Stick with "any 5+ wins" or split by colour?
-* **Loser-goes-first**: currently `startingStone` strictly alternates. Tradition often gives the previous loser the first move next round. Implement, or keep strict alternation?
-* **Best-streak weighting**: a streak of 5 Easy wins counts the same as 5 Hard wins. Alternative: per-mode streaks, expose the maximum to the portal. Or expose only Hard streaks (Hard is hard but beatable, so a Hard streak of even 2 is meaningful).
-* **AI delay configurability**: 350 ms hard-coded vs. user-tunable slider (e.g., 0 / 350 / 800 ms)?
 * **Single undo**: Tic-Tac-Toe forbids undo. Gomoku games are 30–80 moves long; a single undo (one human move + one AI move reverted) might be a quality-of-life feature. Implement, or keep "moves are final" for parity with the family?
 * **Move history sidebar**: list of moves (`B(8,8) — W(7,8) — …`)? Useful for analysis, but adds presentation complexity.
-* **Stone style toggle (Tic-Tac-Toe-Game inspired)**: ship classic black/white stones (current plan) plus an alternative "dental" theme (healthy / decayed teeth) under a Teeth ↔ Classic toggle, or keep Gomoku visually pure?
-* **Sound**: out of scope for v1. Reconsider for v1.1 (subtle "click" on placement, "ding" on win)?
 * **Touch UX on mobile**: 15×15 cells get small on a phone. Add pinch-zoom / pan, or accept "desktop primary"?
-* **Confirmation dialogs**: `Esc` resets session scores. Confirm in a modal, or commit immediately?
 * **Keyboard shortcut for swap-colour**: currently human is always Black. Allow human-as-White for variety?
 
 ---
