@@ -1,6 +1,8 @@
+import type { ArcadeStatus } from '../arcade';
 import { bestMove } from './ai';
 import { CENTER_INDEX, TOTAL_CELLS } from './constants';
 import { EMPTY_BOARD } from './grid';
+import { roundScoreFor } from './scoring';
 import { checkWinAt, isDraw } from './win';
 import type {
   BestStreaks,
@@ -8,17 +10,23 @@ import type {
   Cell,
   GameAction,
   GameState,
+  GameStatus,
   Mode,
   Rng,
   Stone,
 } from './types';
 
-const opposite = (stone: Stone): Stone => (stone === 'B' ? 'W' : 'B');
+export const opposite = (stone: Stone): Stone => (stone === 'B' ? 'W' : 'B');
 
-const aiStoneFor = (state: Pick<GameState, 'mode' | 'humanStone'>): Stone | null => {
+/** The AI's stone, or null in PvP. */
+export const aiStoneFor = (state: Pick<GameState, 'mode' | 'humanStone'>): Stone | null => {
   if (state.mode === 'pvp') return null;
   return opposite(state.humanStone);
 };
+
+/** True when the side to move is a human (always in PvP). */
+export const isHumanTurn = (state: Pick<GameState, 'mode' | 'humanStone' | 'current'>): boolean =>
+  state.mode === 'pvp' || state.current === state.humanStone;
 
 const placeAt = (board: Board, index: number, stone: Stone): Board => {
   const next = board.slice() as Cell[];
@@ -38,6 +46,9 @@ export type CreateInitialOptions = {
   humanStone?: Stone;
   bestStreaks?: BestStreaks;
   startingStone?: Stone;
+  /** Defaults to `idle` (waiting for the first round to start). */
+  status?: GameStatus;
+  round?: number;
 };
 
 export const createInitialState = (opts: CreateInitialOptions = {}): GameState => {
@@ -47,7 +58,7 @@ export const createInitialState = (opts: CreateInitialOptions = {}): GameState =
   return {
     board: EMPTY_BOARD,
     current: startingStone,
-    status: 'playing',
+    status: opts.status ?? 'idle',
     winner: null,
     winningLine: null,
     lastMoveIndex: null,
@@ -59,21 +70,19 @@ export const createInitialState = (opts: CreateInitialOptions = {}): GameState =
     currentStreak: 0,
     moveCount: 0,
     focusIndex: CENTER_INDEX,
+    points: 0,
+    roundScore: 0,
+    round: opts.round ?? 0,
   };
 };
 
-const applyMoveResult = (
-  state: GameState,
-  board: Board,
-  lastIndex: number,
-): GameState => {
+const applyMoveResult = (state: GameState, board: Board, lastIndex: number): GameState => {
+  const moveCount = state.moveCount + 1;
   const win = checkWinAt(board, lastIndex);
   if (win) {
     const aiStone = aiStoneFor(state);
-    const humanWon =
-      aiStone === null
-        ? win.winner === 'B'
-        : win.winner === state.humanStone;
+    // PvP keeps the original rule: the streak follows Black.
+    const humanWon = aiStone === null ? win.winner === 'B' : win.winner === state.humanStone;
 
     const scores = {
       ...state.scores,
@@ -82,9 +91,9 @@ const applyMoveResult = (
     };
     const currentStreak = humanWon ? state.currentStreak + 1 : 0;
     const prevBest = state.bestStreaks[state.mode];
-    const bestStreaks: BestStreaks = currentStreak > prevBest
-      ? { ...state.bestStreaks, [state.mode]: currentStreak }
-      : state.bestStreaks;
+    const bestStreaks: BestStreaks =
+      currentStreak > prevBest ? { ...state.bestStreaks, [state.mode]: currentStreak } : state.bestStreaks;
+    const roundScore = roundScoreFor(state.mode, state.humanStone, win.winner, moveCount);
 
     return {
       ...state,
@@ -96,11 +105,14 @@ const applyMoveResult = (
       scores,
       currentStreak,
       bestStreaks,
-      moveCount: state.moveCount + 1,
+      moveCount,
+      roundScore,
+      points: state.points + roundScore,
     };
   }
 
   if (isDraw(board)) {
+    const roundScore = roundScoreFor(state.mode, state.humanStone, null, moveCount);
     return {
       ...state,
       board,
@@ -110,7 +122,9 @@ const applyMoveResult = (
       winningLine: null,
       scores: { ...state.scores, draws: state.scores.draws + 1 },
       currentStreak: 0,
-      moveCount: state.moveCount + 1,
+      moveCount,
+      roundScore,
+      points: state.points + roundScore,
     };
   }
 
@@ -119,28 +133,52 @@ const applyMoveResult = (
     board,
     lastMoveIndex: lastIndex,
     current: opposite(state.current),
-    moveCount: state.moveCount + 1,
+    moveCount,
   };
 };
 
 const tryPlace = (state: GameState, index: number, stone: Stone): GameState => {
   if (state.status !== 'playing') return state;
-  if (index < 0 || index >= TOTAL_CELLS) return state;
+  if (!Number.isInteger(index) || index < 0 || index >= TOTAL_CELLS) return state;
   if (state.board[index] !== null) return state;
   if (state.current !== stone) return state;
   const next = placeAt(state.board, index, stone);
   return applyMoveResult(state, next, index);
 };
 
+/** A fresh, empty round on top of the current match. */
+const freshRound = (state: GameState, startingStone: Stone, status: GameStatus): GameState => ({
+  ...state,
+  board: EMPTY_BOARD,
+  current: startingStone,
+  startingStone,
+  status,
+  winner: null,
+  winningLine: null,
+  lastMoveIndex: null,
+  moveCount: 0,
+  focusIndex: CENTER_INDEX,
+  roundScore: 0,
+  round: state.round + 1,
+});
+
 export type AdvanceContext = { rng: Rng };
 
-export const advanceGame = (
-  state: GameState,
-  action: GameAction,
-  ctx: AdvanceContext,
-): GameState => {
+export const advanceGame = (state: GameState, action: GameAction, ctx: AdvanceContext): GameState => {
   switch (action.type) {
+    case 'start':
+      return state.status === 'idle' ? { ...state, status: 'playing' } : state;
+
+    case 'pause':
+      return state.status === 'playing' ? { ...state, status: 'paused' } : state;
+
+    case 'resume':
+      return state.status === 'paused' ? { ...state, status: 'playing' } : state;
+
     case 'place':
+      // Human input only: never place a stone for the AI (e.g. Enter pressed
+      // during the AI's thinking delay).
+      if (!isHumanTurn(state)) return state;
       return tryPlace(state, action.index, state.current);
 
     case 'aiMove': {
@@ -155,54 +193,54 @@ export const advanceGame = (
     }
 
     case 'newRound': {
-      // C1 — loser-goes-first: if the previous round had a winner, the
-      // loser opens the next round; on draw or first round, alternate.
-      const nextStarting: Stone = state.winner !== null
-        ? opposite(state.winner)
+      // Loser-goes-first: after a decided round the loser opens the next one;
+      // after a draw or an abandoned round the opener alternates.
+      const decided = state.status === 'won' && state.winner !== null;
+      const nextStarting: Stone = decided
+        ? opposite(state.winner as Stone)
         : opposite(state.startingStone);
-      return {
-        ...state,
-        board: EMPTY_BOARD,
-        current: nextStarting,
-        status: 'playing',
-        winner: null,
-        winningLine: null,
-        lastMoveIndex: null,
-        startingStone: nextStarting,
-        moveCount: 0,
-        focusIndex: CENTER_INDEX,
-      };
+      return freshRound(state, nextStarting, 'playing');
     }
 
     case 'changeMode': {
-      const startingStone: Stone = 'B';
+      // A new mode is a new match: tallies, streak and points start over.
+      const status: GameStatus = state.status === 'idle' ? 'idle' : 'playing';
       return {
-        ...state,
+        ...freshRound(state, 'B', status),
         mode: action.mode,
-        board: EMPTY_BOARD,
-        current: startingStone,
-        startingStone,
-        status: 'playing',
-        winner: null,
-        winningLine: null,
-        lastMoveIndex: null,
         scores: { black: 0, white: 0, draws: 0 },
         currentStreak: 0,
-        moveCount: 0,
-        focusIndex: CENTER_INDEX,
+        points: 0,
       };
     }
 
-    case 'resetScores':
-      return {
-        ...state,
-        scores: { black: 0, white: 0, draws: 0 },
-        currentStreak: 0,
-      };
+    case 'resetMatch':
+      return createInitialState({
+        mode: state.mode,
+        humanStone: state.humanStone,
+        bestStreaks: state.bestStreaks,
+        round: state.round + 1,
+      });
 
     case 'focus': {
-      if (action.index < 0 || action.index >= TOTAL_CELLS) return state;
+      if (!Number.isInteger(action.index) || action.index < 0 || action.index >= TOTAL_CELLS) return state;
+      if (action.index === state.focusIndex) return state;
       return { ...state, focusIndex: action.index };
     }
+  }
+};
+
+/** Map the round lifecycle onto the shared arcade status. */
+export const arcadeStatusOf = (status: GameStatus): ArcadeStatus => {
+  switch (status) {
+    case 'idle':
+      return 'idle';
+    case 'playing':
+      return 'running';
+    case 'paused':
+      return 'paused';
+    case 'won':
+    case 'draw':
+      return 'gameOver';
   }
 };

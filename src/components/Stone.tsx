@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useId, type CSSProperties } from 'react';
 
 export type StoneVariant = 'black' | 'white';
 
@@ -12,7 +12,8 @@ export type StoneProps = {
 
 export const Stone = ({ variant, size = '100%', className, style, title }: StoneProps) => {
   const isBlack = variant === 'black';
-  const gradientId = `gmk-stone-${variant}`;
+  // Unique per instance: 225 cells used to share two duplicate element ids.
+  const gradientId = `gmk-stone-${variant}-${useId().replace(/:/g, '')}`;
   return (
     <svg
       className={className}

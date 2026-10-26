@@ -2,6 +2,7 @@ import { memo } from 'react';
 import type { IconStyle } from '../hooks/useIconStyle';
 import { BOARD_SIZE } from '../logic/constants';
 import type { Cell as CellValue } from '../logic/types';
+import styles from './GameBoard.module.css';
 import { Stone } from './Stone';
 import { ToothIcon } from './ToothIcon';
 
@@ -22,19 +23,18 @@ const ariaForValue = (index: number, value: CellValue, iconStyle: IconStyle): st
   const col = (index % BOARD_SIZE) + 1;
   if (value === null) return `Row ${row}, column ${col}, empty`;
   const noun = iconStyle === 'tooth' ? 'tooth' : 'stone';
-  return value === 'B'
-    ? `Row ${row}, column ${col}, black ${noun}`
-    : `Row ${row}, column ${col}, white ${noun}`;
+  return `Row ${row}, column ${col}, ${value === 'B' ? 'black' : 'white'} ${noun}`;
 };
 
-const Piece = ({ value, iconStyle }: { value: 'B' | 'W'; iconStyle: IconStyle }) => {
-  if (iconStyle === 'tooth') {
-    return <ToothIcon variant={value === 'B' ? 'black' : 'white'} />;
-  }
-  return <Stone variant={value === 'B' ? 'black' : 'white'} />;
-};
+const Piece = ({ value, iconStyle }: { value: 'B' | 'W'; iconStyle: IconStyle }) =>
+  iconStyle === 'tooth' ? (
+    <ToothIcon variant={value === 'B' ? 'black' : 'white'} />
+  ) : (
+    <Stone variant={value === 'B' ? 'black' : 'white'} />
+  );
 
-export const Cell = memo(({
+/** One intersection of the full board: a real button (click / Enter to place). */
+export const Cell = memo(function Cell({
   index,
   value,
   isFocused,
@@ -44,41 +44,37 @@ export const Cell = memo(({
   iconStyle,
   onSelect,
   onFocusCell,
-}: CellProps) => {
-  const handleClick = () => {
-    if (!isInteractive) return;
-    onSelect(index);
-  };
-  const handleFocus = () => onFocusCell(index);
-
+}: CellProps) {
+  const canPlace = isInteractive && value === null;
   return (
     <button
       type="button"
       className={[
-        'gmk-cell',
-        value ? `gmk-cell-${value.toLowerCase()}` : 'gmk-cell-empty',
-        isFocused ? 'gmk-cell-focused' : '',
-        isWinning ? 'gmk-cell-winning' : '',
-        isLastMove ? 'gmk-cell-last' : '',
-      ].filter(Boolean).join(' ')}
+        styles.cell,
+        value === null ? styles.empty : '',
+        canPlace ? styles.playable : '',
+        isFocused ? styles.focused : '',
+        isWinning ? styles.winning : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       aria-label={ariaForValue(index, value, iconStyle)}
-      onClick={handleClick}
-      onFocus={handleFocus}
+      aria-disabled={!canPlace}
+      onClick={() => {
+        if (canPlace) onSelect(index);
+      }}
+      onFocus={() => onFocusCell(index)}
       tabIndex={isFocused ? 0 : -1}
       data-index={index}
     >
       {value !== null && (
-        <span className={`gmk-stone gmk-piece-${iconStyle}`} aria-hidden="true">
+        <span className={`${styles.piece} ${iconStyle === 'tooth' ? styles.tooth : ''}`} aria-hidden="true">
           <Piece value={value} iconStyle={iconStyle} />
         </span>
       )}
-      {isLastMove && value !== null && (
-        <span className="gmk-last-marker" aria-hidden="true" />
-      )}
+      {isLastMove && value !== null && <span className={styles.lastMarker} aria-hidden="true" />}
     </button>
   );
 });
-
-Cell.displayName = 'Cell';
 
 export default Cell;

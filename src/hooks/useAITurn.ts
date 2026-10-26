@@ -1,32 +1,25 @@
 import { useEffect } from 'react';
 import { AI_DELAY_MS } from '../logic/constants';
-import type { GameAction, GameState, Stone } from '../logic/types';
+import { aiStoneFor } from '../logic/game';
+import type { GameAction, GameState } from '../logic/types';
 
-const opposite = (stone: Stone): Stone => (stone === 'B' ? 'W' : 'B');
-
+/**
+ * Dispatches `aiMove` after `delayMs` whenever it is the AI's turn in a round
+ * that is in play. Any state change (move, pause, new round, mode change),
+ * `enabled` turning false or unmount cancels the pending move.
+ */
 export const useAITurn = (
   state: GameState,
   dispatch: (action: GameAction) => void,
   delayMs: number = AI_DELAY_MS,
+  enabled = true,
 ): void => {
+  const aiStone = aiStoneFor(state);
+  const aiToMove = enabled && state.status === 'playing' && aiStone !== null && state.current === aiStone;
+
   useEffect(() => {
-    if (state.mode === 'pvp') return;
-    if (state.status !== 'playing') return;
-    const aiStone = opposite(state.humanStone);
-    if (state.current !== aiStone) return;
-
-    const timer = setTimeout(() => {
-      dispatch({ type: 'aiMove' });
-    }, Math.max(0, delayMs));
-
-    return () => clearTimeout(timer);
-  }, [
-    state.mode,
-    state.status,
-    state.current,
-    state.humanStone,
-    state.board,
-    dispatch,
-    delayMs,
-  ]);
+    if (!aiToMove) return;
+    const timer = window.setTimeout(() => dispatch({ type: 'aiMove' }), Math.max(0, delayMs));
+    return () => window.clearTimeout(timer);
+  }, [aiToMove, state.board, state.round, dispatch, delayMs]);
 };

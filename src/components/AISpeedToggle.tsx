@@ -3,6 +3,7 @@ import type { AISpeed } from '../hooks/useAIDelay';
 export type AISpeedToggleProps = {
   speed: AISpeed;
   onChange: (next: AISpeed) => void;
+  disabled?: boolean;
 };
 
 const OPTIONS: ReadonlyArray<{ id: AISpeed; label: string; hint: string }> = [
@@ -12,30 +13,26 @@ const OPTIONS: ReadonlyArray<{ id: AISpeed; label: string; hint: string }> = [
   { id: 'slow', label: '1s', hint: 'Slow (1000 ms)' },
 ];
 
-export const AISpeedToggle = ({ speed, onChange }: AISpeedToggleProps) => {
-  return (
-    <div className="gmk-settings-group" role="radiogroup" aria-label="AI speed">
-      <span className="gmk-settings-label">AI delay</span>
-      <div className="gmk-segmented">
-        {OPTIONS.map(({ id, label, hint }) => {
-          const active = id === speed;
-          return (
-            <button
-              type="button"
-              key={id}
-              role="radio"
-              aria-checked={active}
-              title={hint}
-              className={`gmk-segmented-btn${active ? ' gmk-segmented-active' : ''}`}
-              onClick={() => onChange(id)}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+export const AISpeedToggle = ({ speed, onChange, disabled = false }: AISpeedToggleProps) => (
+  <div className="gmk-setting">
+    <span className="gmk-setting__label">
+      AI delay
+    </span>
+    <div className="arc-segmented" role="group" aria-label="AI delay">
+      {OPTIONS.map(({ id, label, hint }) => (
+        <button
+          type="button"
+          key={id}
+          aria-pressed={id === speed}
+          title={hint}
+          disabled={disabled}
+          onClick={() => onChange(id)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
-  );
-};
+  </div>
+);
 
 export default AISpeedToggle;

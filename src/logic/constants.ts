@@ -1,3 +1,5 @@
+import type { Mode } from './types';
+
 export const BOARD_SIZE = 15;
 export const WIN_LENGTH = 5;
 export const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
@@ -24,6 +26,9 @@ export const STAR_POINT_COORDS: ReadonlyArray<readonly [number, number]> = [
 export const PLACE_ANIMATION_MS = 130;
 export const STRIKE_ANIMATION_MS = 400;
 
+// Prefix of the per-mode best win-streak keys (`gomoku.highScore.<mode>`).
+// Historical name: it stores streaks, not arcade scores — the arcade Best
+// score lives in `arcade.stats.gomoku`.
 export const STORAGE_KEY_BEST = 'gomoku.highScore';
 
 // 4 line directions as (dRow, dCol). Diagonals included.
@@ -33,3 +38,10 @@ export const DIRECTIONS: ReadonlyArray<readonly [number, number]> = [
   [1, 1],   // diagonal ↘
   [1, -1],  // diagonal ↙
 ];
+
+export const MODE_LABEL: Record<Mode, string> = {
+  pvp: 'PvP',
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+};

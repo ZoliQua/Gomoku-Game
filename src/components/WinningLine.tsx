@@ -1,5 +1,6 @@
 import { BOARD_SIZE } from '../logic/constants';
 import type { WinningLine as Line } from '../logic/types';
+import styles from './GameBoard.module.css';
 
 export type WinningLineProps = {
   line: Line;
@@ -25,7 +26,7 @@ export const WinningLine = ({ line }: WinningLineProps) => {
 
   return (
     <svg
-      className="gmk-winning-line"
+      className={styles.winLine}
       viewBox={`0 0 ${VIEW} ${VIEW}`}
       preserveAspectRatio="none"
       aria-hidden="true"
@@ -38,7 +39,8 @@ export const WinningLine = ({ line }: WinningLineProps) => {
         stroke="var(--gmk-win-line)"
         strokeWidth="3"
         strokeLinecap="round"
-        className="gmk-winning-stroke"
+        className={styles.winStroke}
+        pathLength={100}
         vectorEffect="non-scaling-stroke"
       />
     </svg>

@@ -1,4 +1,5 @@
 export { GomokuGame } from './GomokuGame';
+export { GomokuDemo } from './demo/GomokuDemo';
 export { default } from './GomokuGame';
 export type {
   Board,

@@ -1,0 +1,204 @@
+/* Goban, cells and pieces. Wood, stones and teeth are game-identity colours
+   that read well on both arcade themes; everything else uses kit tokens. */
+
+.frame {
+  --gmk-board-bg: #d2a05c;
+  --gmk-grid-line: rgba(60, 38, 14, 0.85);
+  --gmk-star-point: rgba(60, 38, 14, 0.95);
+  --gmk-last-move: var(--danger);
+  --gmk-win-line: var(--ok);
+  --gmk-tooth-black-fill: #1c1c1f;
+  --gmk-tooth-black-stroke: #000;
+  --gmk-tooth-white-fill: #f6f0dc;
+  --gmk-tooth-white-stroke: #6a4a20;
+
+  position: relative;
+  width: min(72vmin, 600px);
+  aspect-ratio: 1 / 1;
+  padding: 12px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(255, 230, 180, 0.2), transparent 70%),
+    var(--gmk-board-bg);
+  border: 1px solid var(--panel-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), inset 0 0 30px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.mini {
+  width: auto;
+  height: 88%;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+
+.goban,
+.winLine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.goban {
+  z-index: 0;
+}
+
+.winLine {
+  z-index: 4;
+}
+
+.winStroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: gmk-strike 0.42s 0.05s ease-out forwards;
+  filter: drop-shadow(0 1px 6px color-mix(in oklab, var(--gmk-win-line) 65%, transparent));
+}
+
+.cell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  outline: none;
+  cursor: default;
+}
+
+.playable {
+  cursor: pointer;
+}
+
+.playable:hover::before {
+  content: '';
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.focused::after {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.cell:focus-visible::after {
+  border-color: var(--accent-strong);
+}
+
+.piece {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  height: 90%;
+  animation: gmk-pop 0.13s ease-out;
+}
+
+.tooth {
+  /* Slightly larger so the elongated tooth shape reads at cell scale. */
+  width: 95%;
+  height: 95%;
+}
+
+.winning .piece {
+  filter: drop-shadow(0 0 6px var(--gmk-win-line));
+}
+
+.lastMarker {
+  position: absolute;
+  z-index: 3;
+  width: 14%;
+  height: 14%;
+  border-radius: 50%;
+  background: var(--gmk-last-move);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  animation: gmk-fade-in 0.18s ease-out;
+}
+
+/* Mini (demo) pieces: plain CSS discs, no SVG per cell. */
+.dot {
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+}
+
+.dotBlack {
+  background: radial-gradient(circle at 35% 32%, #5a5a5d, #1f1f22 55%, #000);
+}
+
+.dotWhite {
+  background: radial-gradient(circle at 35% 32%, #fff, #f1ebd5 60%, #c8b890);
+  box-shadow: inset 0 0 0 1px rgba(120, 90, 40, 0.35);
+}
+
+.dotLast {
+  outline: 2px solid var(--gmk-last-move);
+  outline-offset: -1px;
+}
+
+@keyframes gmk-pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gmk-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gmk-strike {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piece,
+  .lastMarker {
+    animation: none;
+  }
+  .winStroke {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

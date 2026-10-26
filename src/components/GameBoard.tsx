@@ -1,57 +1,94 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import type { IconStyle } from '../hooks/useIconStyle';
 import { BOARD_SIZE } from '../logic/constants';
-import type { GameAction, GameState } from '../logic/types';
+import type { Board, WinningLine as Line } from '../logic/types';
 import { Cell } from './Cell';
+import styles from './GameBoard.module.css';
 import { GobanBackground } from './GobanBackground';
 import { WinningLine } from './WinningLine';
 
 export type GameBoardProps = {
-  state: GameState;
-  dispatch: (action: GameAction) => void;
-  isHumanTurn: boolean;
-  iconStyle: IconStyle;
+  board: Board;
+  winningLine: Line | null;
+  lastMoveIndex: number | null;
+  focusIndex?: number;
+  /** True when the human may place a stone right now. */
+  interactive?: boolean;
+  iconStyle?: IconStyle;
+  onPlace?: (index: number) => void;
+  onFocusCell?: (index: number) => void;
+  /** `mini` renders the compact, non-interactive landing-page variant. */
+  variant?: 'full' | 'mini';
 };
 
-export const GameBoard = ({ state, dispatch, isHumanTurn, iconStyle }: GameBoardProps) => {
-  const interactive = state.status === 'playing' && isHumanTurn;
+const noop = () => {};
 
-  const winningSet = useMemo(() => {
-    if (!state.winningLine) return null;
-    return new Set(state.winningLine);
-  }, [state.winningLine]);
+const gridStyle = {
+  gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+  gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr)`,
+};
 
-  const onSelect = (index: number) => dispatch({ type: 'place', index });
-  const onFocusCell = (index: number) => dispatch({ type: 'focus', index });
+export const GameBoard = memo(function GameBoard({
+  board,
+  winningLine,
+  lastMoveIndex,
+  focusIndex = -1,
+  interactive = false,
+  iconStyle = 'stone',
+  onPlace = noop,
+  onFocusCell = noop,
+  variant = 'full',
+}: GameBoardProps) {
+  const winningSet = useMemo(() => (winningLine ? new Set(winningLine) : null), [winningLine]);
+
+  if (variant === 'mini') {
+    return (
+      <div className={`${styles.frame} ${styles.mini}`} aria-hidden="true">
+        <div className={styles.board} style={gridStyle}>
+          <GobanBackground />
+          {board.map((value, index) => (
+            <div key={index} className={styles.cell}>
+              {value !== null && (
+                <span
+                  className={[
+                    styles.dot,
+                    value === 'B' ? styles.dotBlack : styles.dotWhite,
+                    lastMoveIndex === index ? styles.dotLast : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                />
+              )}
+            </div>
+          ))}
+          {winningLine && <WinningLine line={winningLine} />}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="gmk-board"
-      role="grid"
-      aria-label="Gomoku board"
-      style={{
-        gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-        gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr)`,
-      }}
-    >
-      <GobanBackground />
-      {state.board.map((value, index) => (
-        <Cell
-          key={index}
-          index={index}
-          value={value}
-          isFocused={state.focusIndex === index}
-          isWinning={winningSet ? winningSet.has(index) : false}
-          isLastMove={state.lastMoveIndex === index}
-          isInteractive={interactive}
-          iconStyle={iconStyle}
-          onSelect={onSelect}
-          onFocusCell={onFocusCell}
-        />
-      ))}
-      {state.winningLine && <WinningLine line={state.winningLine} />}
+    <div className={styles.frame}>
+      <div className={styles.board} role="group" aria-label="Gomoku board" style={gridStyle}>
+        <GobanBackground />
+        {board.map((value, index) => (
+          <Cell
+            key={index}
+            index={index}
+            value={value}
+            isFocused={focusIndex === index}
+            isWinning={winningSet ? winningSet.has(index) : false}
+            isLastMove={lastMoveIndex === index}
+            isInteractive={interactive}
+            iconStyle={iconStyle}
+            onSelect={onPlace}
+            onFocusCell={onFocusCell}
+          />
+        ))}
+        {winningLine && <WinningLine line={winningLine} />}
+      </div>
     </div>
   );
-};
+});
 
 export default GameBoard;
