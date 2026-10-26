@@ -3,35 +3,38 @@
 ## Project Facts
 
 * **Repository (standalone)**: `https://github.com/ZoliQua/Gomoku-Game`
-* **Portal repo**: <https://github.com/ZoliQua/Arcade-Game-Center> — this game ships embedded as the **5th game**. Read `Arcade-Game-Center/MIGRATION.md` before any structural change to know what the portal will expect.
+* **Portal repo**: <https://github.com/ZoliQua/Arcade-Game-Center> — this game ships embedded as the **5th game**. It follows the shared arcade standard (`src/arcade/` kit, Snake-Game is the reference implementation).
 * **Sister projects**:
   + <https://github.com/ZoliQua/Snake-Game>
   + <https://github.com/ZoliQua/Tetris-Game>
   + <https://github.com/ZoliQua/2048-Game>
   + <https://github.com/ZoliQua/Tic-Tac-Toe-Game>
   Mirror their architecture, hook patterns, and conventions unless a Gomoku-specific reason dictates otherwise.
-* **Plan**: see `GAME-PLAN.md` in the repo root for the full design, AI specification, board sizing, and phased roadmap.
-* **Stack**: React 18+, Vite, TypeScript, plain CSS scoped under `.gmk-app`.
-* **Package manager**: npm.
-* **Node**: >=20.
+* **Plan**: `GAME-PLAN.md` holds the original v1 design, AI specification and roadmap (historical; this file and the code win on conflicts).
+* **Stack**: React 18.3, Vite 5.4, TypeScript 5.6, ESLint 9 flat config, Vitest 2.1 + jsdom + Testing Library — identical to Snake-Game. Styles are CSS Modules (`GomokuGame.module.css`, `components/GameBoard.module.css`) on top of the kit's `arcade.css`; no global selectors.
+* **Package manager**: npm. **Node**: >=20. Package `gomoku-game`, version 2.0.0.
 * **Scripts**:
-  + `npm run dev` — local dev server
-  + `npm run build` — production build
-  + `npm run preview` — preview production build
-  + `npm run typecheck` — `tsc --noEmit`
+  + `npm run dev` / `build` (`tsc -b && vite build`) / `preview`
+  + `npm run typecheck` — `tsc -b`
   + `npm run lint` — ESLint
-  + `npm run test` — Vitest (only if a test setup actually exists)
-* **Board**: fixed **15 × 15** in v1 (`Board = readonly Cell[]` of length `BOARD_SIZE * BOARD_SIZE = 225`). Larger / smaller boards are an open question, not a v1 feature.
-* **Stones**: internally `'B'` (Black) and `'W'` (White). Black goes first.
-* **Modes**: `'pvp'`, `'easy'` (random AI), `'medium'` (pattern heuristic), `'hard'` (heuristic + α-β minimax with candidate restriction).
-* **Win**: 5-or-more in a row in any of 4 directions (horizontal, vertical, both diagonals). Free-Gomoku rules — overlines (6+) **count as a win** in v1; Renju forbidden moves are an open question.
-* **Win check** runs **only on the line through the last placed stone** (4 directions, ±5 cells), not over the full board. Order matters: check win first, then draw (full board, no winner).
-* **Best stat**: longest human (Black) win streak across all modes. `localStorage` key `gomoku.highScore`. Only written when strictly higher.
-* **Session scores**: `{ black, white, draws }`, displayed live; reset on mode change or explicit `Esc`. Not persisted in v1.
-* **AI delay**: `AI_DELAY_MS = 350` (constants.ts). `useAITurn` dispatches `{ type: 'aiMove' }` after this delay; the timer is cancelled on state change or unmount. Hard AI must complete its search **before** the dispatch fires (target < 250 ms per move).
-* **No game loop**: 2048-style. There is no auto-tick. State only advances on user input and on AI's delayed dispatch. There is **no `useGameLoop`** in this project.
-* **Rendering**: DOM grid (CSS grid) for the board, inline SVG for the goban background lines + star points + stones + last-move marker. No canvas.
-* **Last-move marker**: a small accent dot/ring drawn on the most recently placed stone; cleared on new round.
+  + `npm test` — Vitest (logic + component tests); `npm run test:watch`
+  + `npm run check` — lint → typecheck → test → build (same as CI)
+* **Arcade id**: `gomoku`, colour token `--game-gomoku`. `App.tsx` is exactly `<ArcadeShell gameId="gomoku"><GomokuGame /></ArcadeShell>`.
+* **Board**: fixed **15 × 15** (`Board = readonly Cell[]`, length 225).
+* **Stones**: `'B'` / `'W'`; the human is always Black. Loser-goes-first between rounds (draw / abandoned round → alternate).
+* **Modes**: `'pvp'`, `'easy'` (random near-stone), `'medium'` (pattern heuristic), `'hard'` (heuristic + α-β, iterative deepening 2/4, 250 ms budget).
+* **Win**: 5-or-more in a row in 4 directions; free-Gomoku — overlines (6+) **win**. Win check only on the lines through the last stone, then the draw check.
+* **Status / arcade mapping**: logic `idle → playing ⇄ paused → won | draw`. Arcade: `idle` (before the first round only) · `running` (`playing`) · `paused` · `gameOver` (`won`/`draw`). **Each round is one arcade run**; `runKey` = `state.round` (increments on every new round, mode change, reset).
+* **Scoring**: only `duelRoundScore` from the kit (`logic/scoring.ts`): difficulty = mode (`null` for PvP → `ranked: false`), moves = stones on board, boardCells = 225, outcome from the human side (PvP: `draw` if drawn else `win`). The reducer stores `roundScore` (0 while in play) and adds it to `points` (match total). `useArcadeRun` gets `score = roundScore`.
+* **Stat panel**: Points (match), Best (`stats.best`, best single ranked round), W–L–D (B–W–D in PvP), Streak (current · best for the mode), Time (`useRunTimer`, per round, pause-aware).
+* **Session**: `arcade.session.gomoku`, schema 1, validated by `isGomokuState` (logic/persist.ts). Saved whenever status ≠ `idle` — including after a finished round, so the match (tally, points, streak) survives between rounds. Restore is always paused + "Welcome back"; a save of a finished round resumes as the next empty round (never re-scored). Discarded only on Reset match / Discard (both return to `idle`).
+* **Local settings keys (unchanged)**: `gomoku.iconStyle`, `gomoku.aiSpeed`, `gomoku.soundEnabled`, `gomoku.highScore.<mode>` (best **streaks**; legacy `gomoku.highScore` migrates to Hard). The registry must **not** declare `gomoku.highScore` as `legacyBestKey` — it is a streak, not a score.
+* **Keys**: arrows/WASD cursor · Space/Enter primary (start / place / resume / next round) · P/Esc pause · R new round · N / 1–4 mode · I stones↔teeth · C reset match (Enter confirm, Esc cancel). T is the arcade theme key — never bind it.
+* **AI delay**: Instant / 150 / 350 / 1000 ms (`useAIDelay`). `useAITurn` cancels on move, pause, new round, mode change, confirm dialog and unmount.
+* **Sound**: Web Audio cues in `GomokuGame` only — never in the demo.
+* **Demo**: `GomokuDemo` — Medium vs Medium (3 random opening plies) on the real reducer, 300 ms per ply, restart 1.5 s after a round; `GameBoard variant="mini"` (no buttons, CSS discs); no keys, stats, saves, sound or storage writes.
+* **No game loop**: state advances only on input and the AI's delayed dispatch.
+* **Rendering**: DOM grid of buttons; inline SVG for goban lines, star points, stones/teeth and the winning line. No canvas.
 * **Target platform**: desktop browser primary; touch works (cells are buttons), pinch-zoom not required at 15×15 on mobile.
 * **Communication**: respond to the user in **Hungarian** in chat, even though this file and the codebase are in English.
 
@@ -51,85 +54,58 @@ The standalone repo and the portal embedding are not separate codebases — they
 
 ## Architecture
 
-Logic lives outside presentation. **`src/logic/*` and `src/hooks/*` may not import from `react-dom`, from any portal package (`@arcade/*`), or from `src/components/*`.** This is the rule that makes the package portal-droppable.
+Logic lives outside presentation. **`src/logic/*` and `src/hooks/*` may not import from `react-dom` or `src/components/*`**; they may import the vendored kit (`../arcade`).
 
 ```
 src/
+  arcade/              VENDORED kit from Arcade-Game-Center/packages/kit — never edit here
   logic/
-    constants.ts        # BOARD_SIZE=15, WIN_LENGTH=5, AI_DELAY_MS, search radii
-    types.ts            # Stone, Cell, Board, GameStatus, Mode, GameState, GameAction
-    grid.ts             # index ↔ (row,col), getEmptyCells, isFull, neighbour candidates
-    win.ts              # checkWinAt(board, lastIndex) -> { winner, line } | null; isDraw
-    patterns.ts         # pattern detection (live3, dead4, etc.) — used by AI eval
-    ai.ts               # bestMove(board, stone, mode, rng); minimax + α-β + move ordering
-    game.ts             # advanceGame(state, action, ctx) — single pure reducer
-  hooks/
-    useKeyboardSelect.ts   # arrow + WASD navigation; Enter/Space → place; R/N/1-4/Esc/T
-    useAITurn.ts           # setTimeout-driven AI move dispatcher; cancels on change / unmount
-    useBestStreak.ts       # localStorage-backed best win streak; key 'gomoku.highScore'
-    useElapsedSeconds.ts   # mm:ss round timer; pauses on 'won' / 'draw'
-  components/
-    GameBoard.tsx     # 15×15 CSS grid + 225 Cell children + SVG goban background overlay
-    Cell.tsx          # one cell button; aria-label; renders Stone when filled
-    Stone.tsx         # SVG stone, 'black' | 'white' variant; uses currentColor for highlights
-    GobanBackground.tsx # absolutely positioned SVG: grid lines + star points
-    LastMoveMarker.tsx  # small accent dot rendered on the last placed stone
-    ScoreBoard.tsx    # B / W / draws + currentStreak + bestStreak + status + timer
-    GameControls.tsx  # new round / reset session scores
-    ModeSelect.tsx    # PvP / Easy / Medium / Hard segmented control
-    Overlay.tsx       # idle / won / draw overlay
-  styles/
-    gmk.css           # ALL game styles, every selector starts with `.gmk-app`
-  GomokuGame.tsx      # root component for both standalone AND portal; wraps in <div className="gmk-app">
-  App.tsx             # standalone-only chrome (header/footer); imports GomokuGame
-  main.tsx            # standalone-only React entry; renders <App />
-  index.ts            # library entry: `export { GomokuGame } from './GomokuGame'; export { default } from './GomokuGame';`
+    constants.ts       BOARD_SIZE, WIN_LENGTH, AI budgets, MODE_LABEL, storage key prefix
+    types.ts           Stone, Cell, Board, GameStatus, Mode, GameState, GameAction
+    grid.ts win.ts patterns.ts ai.ts
+    game.ts            advanceGame reducer, createInitialState, arcadeStatusOf, isHumanTurn
+    scoring.ts         outcomeOf / roundScoreFor (duelRoundScore)
+    persist.ts         isGomokuState validator, restoreSavedState
+    autopilot.ts       demo driver
+    testUtils.ts       test helpers (boards, seeded RNG, draw board)
+    *.test.ts
+  hooks/               useAITurn, useGomokuKeys, useBestStreak, useAIDelay, useIconStyle, useSound
+  components/          GameBoard (+ .module.css, full | mini), Cell, Stone, ToothIcon,
+                       GobanBackground, WinningLine, ModeSelect, AISpeedToggle, IconStyleToggle, SoundToggle
+  demo/GomokuDemo.tsx  landing-page attract mode
+  GomokuGame.tsx       embeddable game (ArcadeGameProps) + GomokuGame.module.css + GomokuGame.test.tsx
+  App.tsx main.tsx     standalone page (ArcadeShell; main imports arcade.css, applies theme)
+  index.ts             exports { GomokuGame, GomokuDemo, default } + types
+  test/setup.ts        Vitest setup (copied from Snake-Game)
 ```
 
-Use this layout only after confirming what is already on disk. If the repo diverges, follow the existing convention and flag the divergence — do not silently restructure.
+Stats, Best, session autosave, theme, score panel and overlays come from `src/arcade/`. Change the kit only in Arcade-Game-Center and sync it. The same `src/` is mirrored into `Arcade-Game-Center/apps/gomoku/` once integrated — keep them identical.
 
-A central pure reducer — `advanceGame(state, action, ctx): GameState` — owns every state transition. Hooks dispatch actions and read state; they never mutate `board`, `scores`, or any other field directly. The reducer takes a `ctx: { rng }` argument exactly like the Tic-Tac-Toe reducer, so AI moves stay deterministic in tests.
+A central pure reducer — `advanceGame(state, action, ctx): GameState` — owns every transition; `ctx: { rng }` keeps AI moves deterministic in tests.
 
 ---
 
 ## Type Model
 
 ```ts
-type Stone = 'B' | 'W';
-type Cell = Stone | null;
-type Board = readonly Cell[];                  // length = BOARD_SIZE * BOARD_SIZE = 225
-type WinningLine = readonly [number, number, number, number, number, ...number[]]; // 5+ indices
-
-type GameStatus = 'idle' | 'playing' | 'won' | 'draw';
-type Mode = 'pvp' | 'easy' | 'medium' | 'hard';
-
+type GameStatus = 'idle' | 'playing' | 'paused' | 'won' | 'draw';
 type GameState = {
-  board: Board;
-  current: Stone;
-  status: GameStatus;
-  winner: Stone | null;
-  winningLine: WinningLine | null;
-  lastMoveIndex: number | null;
-  mode: Mode;
-  humanStone: Stone;             // always 'B' in v1
-  startingStone: Stone;          // who started this round
-  scores: { black: number; white: number; draws: number };
-  bestStreak: number;
-  currentStreak: number;
-  moveCount: number;
-  focusIndex: number;            // 0..(BOARD_SIZE*BOARD_SIZE - 1)
+  board: Board; current: Stone; status: GameStatus;
+  winner: Stone | null; winningLine: readonly number[] | null; lastMoveIndex: number | null;
+  mode: Mode; humanStone: Stone; startingStone: Stone;
+  scores: { black: number; white: number; draws: number };   // match tally
+  bestStreaks: Record<Mode, number>; currentStreak: number;
+  moveCount: number; focusIndex: number;
+  points: number;      // match total of round scores
+  roundScore: number;  // last finished round (0 while in play)
+  round: number;       // arcade run key
 };
-
 type GameAction =
-  | { type: 'place'; index: number }
-  | { type: 'aiMove' }
-  | { type: 'newRound' }
-  | { type: 'changeMode'; mode: Mode }
-  | { type: 'resetScores' }
-  | { type: 'focus'; index: number };
+  | { type: 'start' } | { type: 'pause' } | { type: 'resume' }
+  | { type: 'place'; index: number }   // human turns only
+  | { type: 'aiMove' } | { type: 'newRound' } | { type: 'changeMode'; mode: Mode }
+  | { type: 'resetMatch' } | { type: 'focus'; index: number };
 ```
-
-The `Board` is a flat array — not a 2D matrix. `index ↔ (row, col)` conversion lives in `grid.ts`.
 
 ---
 
@@ -144,7 +120,7 @@ The `Board` is a flat array — not a 2D matrix. `index ↔ (row, col)` conversi
 
 **Hard AI is not unbeatable** — Gomoku without Renju restrictions is a Black-favored game, and a v1 α-β AI with depth 4–6 will lose to a strong human. This is intentional for v1; stronger play (VCF/VCT search, opening book, deeper search) is a v1.1 question.
 
-Pure logic is RNG-injected. `bestMove(board, stone, mode, rng)` accepts a `() => number` so `easy` is deterministic in tests. `Math.random` is only invoked at the call site (in `useAITurn`), never inside `src/logic/*`.
+Pure logic is RNG-injected. `bestMove(board, stone, mode, rng)` accepts a `() => number` so `easy` is deterministic in tests. `Math.random` is only invoked at the call sites (`GomokuGame`, `GomokuDemo`), never inside `src/logic/*`.
 
 ---
 
@@ -159,11 +135,15 @@ Pure logic is RNG-injected. `bestMove(board, stone, mode, rng)` accepts a `() =>
 * **Hard AI move budget**: < 250 ms per move at depth 4 on a typical board. Search exits cleanly on time-out (iterative deepening).
 * **Last-move marker** updates on every placement, clears on new round, persists through win/draw display.
 * **Streak stickiness**: `currentStreak` increments only on a human win, resets on any loss or draw. `bestStreak` updates only when `currentStreak > bestStreak`, never decreases.
-* **Mode change resets session, not best**: `changeMode` zeros `{ black, white, draws }` and `currentStreak`; `bestStreak` and `localStorage` preserved.
-* **Keyboard hygiene**: single `keydown` listener per mount, removed on unmount, arrows call `preventDefault`, focus indicator visible during play, focus clamps to `0..224` with row/column edge clamping.
-* **Portal-purity** of `logic/` and `hooks/`: no imports from `react-dom`, `@arcade/*`, or `src/components/*`. Verified with grep in CI.
-* **CSS scope tightness**: every selector in `src/styles/gmk.css` starts with `.gmk-app`. No `:root`, no global `body`, no naked element selectors at root.
-* **Initial state**: `createInitialState()` returns an empty 225-cell board, `current: 'B'`, `status: 'playing'`, `mode: 'pvp'`, all-zero scores, `lastMoveIndex: null`, `bestStreak` loaded from `localStorage` if present.
+* **Mode change starts a new match, not a new best**: `changeMode` zeros tally, points and `currentStreak`; best streaks and stats are preserved. Selecting the current mode is a no-op.
+* **Human input never plays for the AI**: `place` is rejected on the AI's turn.
+* **Pause blocks everything**: no `place`, no `aiMove`, timer stopped.
+* **Each round recorded exactly once** (`useArcadeRun`, runKey = round); a restored finished round is converted to the next round, never re-recorded.
+* **Keyboard hygiene**: single `keydown` listener per mount (`useGomokuKeys`, handlers via ref), starts with `shouldIgnoreKey`, arrows call `preventDefault`, cursor clamps at the edges.
+* **Portal-purity** of `logic/` and `hooks/`: no imports from `react-dom` or `src/components/*`.
+* **CSS scope tightness**: CSS Modules only; no `:root`, `body`, `*` or bare element selectors. Colours from kit tokens (wood/stones/teeth are identity colours). Must read well in dark and light themes.
+* **Initial state**: `createInitialState()` returns an empty 225-cell board, `current: 'B'`, `status: 'idle'`, `mode: 'pvp'`, all-zero tally/points, `round: 0`; the component seeds `bestStreaks` from `localStorage`.
+* **Demo purity**: no keyboard listeners, stats, sessions, sound or storage writes; frozen when `active === false`.
 
 ---
 
@@ -172,8 +152,17 @@ Pure logic is RNG-injected. `bestMove(board, stone, mode, rng)` accepts a `() =>
 * **Verify before and after every non-trivial change.** Read the target file and its neighbours. After the edit, re-check imports, signatures, call sites, and state transitions.
 * **No hallucination.** Do not invent files, hooks, or scripts. If something is not verified, say so explicitly.
 * **Small, local, reversible changes.** One fix or one feature at a time.
-* **Preserve architecture.** No changes to Vite config, `tsconfig`, folder layout, styling approach, or rendering strategy without a stated reason and approval.
+* **Preserve architecture.** No changes to Vite config, `tsconfig`, folder layout, styling approach, or rendering strategy without a stated reason and approval. Toolchain must stay identical to Snake-Game.
 * **No new dependencies** without justification. Default is React + Vite + TS only.
-* **Pure logic is RNG-injected.** `bestMove` and any randomized helper accept an RNG. `Math.random` is only invoked from `useAITurn` (or its tests).
-* **Portal-purity is a hard rule.** `src/logic/*` and `src/hooks/*` may not import from `react-dom`, from any portal package, or from `src/components/*`.
+* **Pure logic is RNG-injected.** `bestMove` and any randomized helper accept an RNG.
+* **Portal-purity is a hard rule.** `src/logic/*` and `src/hooks/*` may not import from `react-dom` or `src/components/*`. Never edit `src/arcade/`.
 * **End-of-task report**: changed files, verified checks, unverified gaps, real risks only.
+
+---
+
+## Git & Commit Rules
+
+- Commit **only** as `Zoltán Dul <zoltan.dul@gmail.com>` (the global git identity).
+- **Never** add `Co-Authored-By: Claude …`, "Generated with Claude Code" or any AI attribution
+  to commit messages or pull-request descriptions.
+- Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
