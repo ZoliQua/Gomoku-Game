@@ -1,7 +1,7 @@
 # ⚫⚪ Gomoku — Five in a Row
 
 A minimal, type-safe **Gomoku** (Five in a Row) on a **15 × 15 goban**, built with **React 18**, **Vite** and **TypeScript** — keyboard-first, grid-based DOM, no canvas, no game engine. Play a friend or three AI levels up to α-β minimax, with a one-click **stones ↔ teeth** toggle.
-Runs on its own **and** as one of the six games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)**.
+Runs on its own **and** as one of the nine games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)**.
 
 [![CI](https://github.com/ZoliQua/Gomoku-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Gomoku-Game/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -42,6 +42,9 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 🟡 Pac-Man | [Pac-Man-Game](https://github.com/ZoliQua/Pac-Man-Game) | Maze |
 | ⚫ **Gomoku** (this repo) | [Gomoku-Game](https://github.com/ZoliQua/Gomoku-Game) | Strategy |
 | 🦷 Tic-Tac-Toe | [Tic-Tac-Toe-Game](https://github.com/ZoliQua/Tic-Tac-Toe-Game) | Duel |
+| 🏓 Breakout | [Breakout-Game](https://github.com/ZoliQua/Breakout-Game) | Paddle |
+| 👾 Space Invaders | [Space-Invaders-Game](https://github.com/ZoliQua/Space-Invaders-Game) | Shooter |
+| 🔴 Connect Four | [Connect-Four-Game](https://github.com/ZoliQua/Connect-Four-Game) | Duel |
 
 ## ✨ Features
 
