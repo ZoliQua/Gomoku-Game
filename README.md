@@ -1,7 +1,7 @@
 # ⚫⚪ Gomoku — Five in a Row
 
 A minimal, type-safe **Gomoku** (Five in a Row) on a **15 × 15 goban**, built with **React 18**, **Vite** and **TypeScript** — keyboard-first, grid-based DOM, no canvas, no game engine. Play a friend or three AI levels up to α-β minimax, with a one-click **stones ↔ teeth** toggle.
-Runs on its own **and** as one of the ten games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)**.
+Runs on its own **and** as one of the eleven games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)**.
 
 [![CI](https://github.com/ZoliQua/Gomoku-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Gomoku-Game/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -46,6 +46,7 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 👾 Space Invaders | [Space-Invaders-Game](https://github.com/ZoliQua/Space-Invaders-Game) | Shooter |
 | 🔴 Connect Four | [Connect-Four-Game](https://github.com/ZoliQua/Connect-Four-Game) | Duel |
 | 🔩 Nut Sort | [Nut-Sort-Game](https://github.com/ZoliQua/Nut-Sort-Game) | Sorting |
+| 🃏 Texas Hold'em | [Texas-Holdem-Game](https://github.com/ZoliQua/Texas-Holdem-Game) | Cards |
 
 ## ✨ Features
 
