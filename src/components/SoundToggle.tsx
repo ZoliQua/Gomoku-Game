@@ -1,14 +1,20 @@
+import { useMessages } from '../arcade';
+import { MESSAGES } from '../i18n';
+
 export type SoundToggleProps = {
   enabled: boolean;
   onToggle: () => void;
 };
 
-export const SoundToggle = ({ enabled, onToggle }: SoundToggleProps) => (
-  <label className="arc-field">
-    <input type="checkbox" checked={enabled} onChange={onToggle} />
-    <span>Sound effects</span>
-    <strong aria-live="polite">{enabled ? 'On' : 'Off'}</strong>
-  </label>
-);
+export const SoundToggle = ({ enabled, onToggle }: SoundToggleProps) => {
+  const t = useMessages(MESSAGES);
+  return (
+    <label className="arc-field">
+      <input type="checkbox" checked={enabled} onChange={onToggle} />
+      <span>{t('sound')}</span>
+      <strong aria-live="polite">{t(enabled ? 'on' : 'off')}</strong>
+    </label>
+  );
+};
 
 export default SoundToggle;

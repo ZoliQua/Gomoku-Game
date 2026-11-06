@@ -2,17 +2,23 @@ import { useCallback, useEffect, useReducer, useRef, useState, type CSSPropertie
 import {
   DUEL_BASE_POINTS,
   formatClock,
+  formatNumber,
+  gameName,
   GameOverlay,
   KeyHelp,
   SaveBadge,
   StatPanel,
   useArcadeRun,
+  useKitMessages,
+  useLang,
+  useMessages,
   useRestoredSession,
   useRunTimer,
   useSessionAutosave,
   type ArcadeGameProps,
   type OverlayAction,
 } from './arcade';
+import { MESSAGES, MODE_KEY, type GomokuMessageKey } from './i18n';
 import { AISpeedToggle } from './components/AISpeedToggle';
 import { GameBoard } from './components/GameBoard';
 import { IconStyleToggle } from './components/IconStyleToggle';
@@ -24,7 +30,6 @@ import { readBestStreaks, useBestStreaks } from './hooks/useBestStreak';
 import { useGomokuKeys } from './hooks/useGomokuKeys';
 import { useIconStyle } from './hooks/useIconStyle';
 import { useSound } from './hooks/useSound';
-import { MODE_LABEL } from './logic/constants';
 import { advanceGame, arcadeStatusOf, createInitialState, isHumanTurn } from './logic/game';
 import { moveFocus } from './logic/grid';
 import { isGomokuState, restoreSavedState, wasRoundInProgress } from './logic/persist';
@@ -37,40 +42,47 @@ const SESSION_SCHEMA = 1;
 
 const MODE_ORDER: readonly Mode[] = ['pvp', 'easy', 'medium', 'hard'];
 
-const KEYS: [string, string][] = [
-  ['← ↑ → ↓', 'Move cursor (or WASD)'],
-  ['Space Enter', 'Place · start · next round'],
-  ['P Esc', 'Pause / resume'],
-  ['R', 'New round'],
-  ['N 1–4', 'Cycle / pick mode'],
-  ['I', 'Stones ↔ teeth'],
-  ['C', 'Reset match'],
+type T = (key: GomokuMessageKey, vars?: Record<string, string | number>) => string;
+
+const keyRows = (t: T): [string, string][] => [
+  ['← ↑ → ↓', t('keyMove')],
+  [`${t('kbdSpace')} Enter`, t('keyPlace')],
+  ['P Esc', t('keyPause')],
+  ['R', t('keyNewRound')],
+  ['N 1–4', t('keyMode')],
+  ['I', t('keyIcons')],
+  ['C', t('keyReset')],
 ];
 
 const rng = () => Math.random();
 const reducer = (state: GameState, action: GameAction): GameState => advanceGame(state, action, { rng });
 
-const tally = (state: GameState): { label: string; value: string } => {
+const tally = (state: GameState, t: T, num: (n: number) => string): { label: string; value: string } => {
   const { black, white, draws } = state.scores;
-  if (state.mode === 'pvp') return { label: 'B–W–D', value: `${black}–${white}–${draws}` };
+  if (state.mode === 'pvp') return { label: t('tallyPvp'), value: `${num(black)}–${num(white)}–${num(draws)}` };
   const human = state.humanStone === 'B' ? black : white;
   const ai = state.humanStone === 'B' ? white : black;
-  return { label: 'W–L–D', value: `${human}–${ai}–${draws}` };
+  return { label: t('tallyDuel'), value: `${num(human)}–${num(ai)}–${num(draws)}` };
 };
 
-const turnLabel = (state: GameState): string => {
-  if (state.mode === 'pvp') return `${state.current === 'B' ? 'Black' : 'White'} to move`;
-  return isHumanTurn(state) ? 'Your turn' : 'AI thinking…';
+const turnLabel = (state: GameState, t: T): string => {
+  if (state.mode === 'pvp') return t(state.current === 'B' ? 'turnBlack' : 'turnWhite');
+  return t(isHumanTurn(state) ? 'yourTurn' : 'aiThinking');
 };
 
-const resultTitle = (state: GameState): string => {
-  if (state.status === 'draw' || state.winner === null) return "It's a draw";
-  if (state.mode === 'pvp') return `${state.winner === 'B' ? 'Black' : 'White'} wins!`;
-  return state.winner === state.humanStone ? 'You win!' : 'The AI wins';
+const resultTitle = (state: GameState, t: T): string => {
+  if (state.status === 'draw' || state.winner === null) return t('draw');
+  if (state.mode === 'pvp') return t(state.winner === 'B' ? 'blackWins' : 'whiteWins');
+  return t(state.winner === state.humanStone ? 'youWin' : 'aiWins');
 };
 
 export function GomokuGame(props: ArcadeGameProps = {}) {
   const { embedded = false } = props;
+  const t = useMessages(MESSAGES);
+  const k = useKitMessages();
+  const [lang] = useLang();
+  const name = gameName('gomoku', lang);
+  const num = (n: number) => formatNumber(n, lang);
   const restored = useRestoredSession<GameState>('gomoku', SESSION_SCHEMA, isGomokuState);
   const [boot] = useState(() => {
     const deviceBest = readBestStreaks();
@@ -221,61 +233,62 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
   const best = Math.max(stats.best, state.roundScore);
   const newBest = status === 'gameOver' && state.roundScore > 0 && state.roundScore > stats.bestBeforeRun;
   const ranked = isRanked(state.mode);
-  const record = tally(state);
+  const record = tally(state, t, num);
+  const modeLabel = t(MODE_KEY[state.mode]);
   const interactive = state.status === 'playing' && isHumanTurn(state) && !confirmReset;
 
   let overlay: { title: string; message: string; actions: OverlayAction[] } | null = null;
   if (confirmReset) {
     overlay = {
-      title: 'Reset match?',
-      message: 'Clears the board, the W–L–D tally, points and the current streak. Best streaks and arcade stats stay.',
+      title: t('resetTitle'),
+      message: t('resetBody'),
       actions: [
-        { label: 'Reset match', onClick: confirmResetMatch, primary: true, kbd: 'Enter' },
-        { label: 'Keep playing', onClick: cancelReset, kbd: 'Esc' },
+        { label: t('resetMatch'), onClick: confirmResetMatch, primary: true, kbd: 'Enter' },
+        { label: t('keepPlaying'), onClick: cancelReset, kbd: 'Esc' },
       ],
     };
   } else if (state.status === 'idle') {
     overlay = {
-      title: 'Gomoku',
-      message: `Five in a row wins. Mode: ${MODE_LABEL[state.mode]}${ranked ? '' : ' (unranked)'} — change it on the right or with 1–4.`,
-      actions: [{ label: 'Start', onClick: start, primary: true, kbd: 'Space' }],
+      title: name,
+      message: t(ranked ? 'idleBodyRanked' : 'idleBodyUnranked', { mode: modeLabel }),
+      actions: [{ label: k('start'), onClick: start, primary: true, kbd: t('kbdSpace') }],
     };
   } else if (state.status === 'paused') {
     overlay = welcomeBack
       ? {
-          title: 'Welcome back',
-          message: `Your ${MODE_LABEL[state.mode]} match was restored — ${record.label} ${record.value}, ${state.points} points.`,
+          title: k('welcomeBack'),
+          message: t('welcomeBody', { mode: modeLabel, tally: record.label, record: record.value, points: num(state.points) }),
           actions: [
-            { label: 'Continue', onClick: togglePause, primary: true, kbd: 'P' },
-            { label: 'New round', onClick: newRound, kbd: 'R' },
+            { label: t('continue'), onClick: togglePause, primary: true, kbd: 'P' },
+            { label: t('newRound'), onClick: newRound, kbd: 'R' },
           ],
         }
       : {
-          title: 'Paused',
-          message: 'Your match is autosaved — the AI waits while you are away.',
+          title: k('paused'),
+          message: t('pausedBody'),
           actions: [
-            { label: 'Resume', onClick: togglePause, primary: true, kbd: 'P' },
-            { label: 'New round', onClick: newRound, kbd: 'R' },
+            { label: k('resume'), onClick: togglePause, primary: true, kbd: 'P' },
+            { label: t('newRound'), onClick: newRound, kbd: 'R' },
           ],
         };
   } else if (status === 'gameOver') {
     overlay = {
-      title: resultTitle(state),
+      title: resultTitle(state, t),
       message: ranked
-        ? `+${state.roundScore} points · Match ${state.points} · Best ${best}${newBest ? ' — new best!' : ''}`
-        : `${record.label} ${record.value} · PvP rounds are unranked and count as plays only.`,
-      actions: [{ label: 'New round', onClick: newRound, primary: true, kbd: 'R' }],
+        ? t(newBest ? 'roundNewBest' : 'roundRanked', { round: num(state.roundScore), points: num(state.points), best: num(best) })
+        : t('roundPvp', { tally: record.label, record: record.value }),
+      actions: [{ label: t('newRound'), onClick: newRound, primary: true, kbd: 'R' }],
     };
   }
 
   const primaryLabel =
     state.status === 'idle'
-      ? 'Start'
+      ? k('start')
       : state.status === 'playing'
-        ? 'Pause'
+        ? k('pause')
         : state.status === 'paused'
-          ? 'Resume'
-          : 'Next round';
+          ? k('resume')
+          : t('nextRound');
   const primaryClick = state.status === 'playing' ? togglePause : primary;
 
   return (
@@ -292,12 +305,10 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
               <span className={styles.titleIcon} aria-hidden="true">
                 {iconStyle === 'tooth' ? '🦷' : '⚫⚪'}
               </span>{' '}
-              Gomoku
+              {name}
             </h1>
             <p className="arc-game__sub">
-              {iconStyle === 'tooth'
-                ? 'Five in a row, dental edition — 15 × 15 board, keyboard-first.'
-                : 'Five in a row on a 15 × 15 goban — keyboard-first.'}
+              {t(iconStyle === 'tooth' ? 'subTooth' : 'subStone')}
             </p>
           </div>
         </header>
@@ -305,13 +316,13 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
 
       <StatPanel
         status={status}
-        statusLabel={status === 'running' ? turnLabel(state) : undefined}
+        statusLabel={status === 'running' ? turnLabel(state, t) : undefined}
         items={[
-          { label: 'Points', value: state.points },
-          { label: 'Best', value: best, highlight: newBest },
+          { label: t('points'), value: num(state.points) },
+          { label: k('best'), value: num(best), highlight: newBest },
           { label: record.label, value: record.value },
-          { label: 'Streak', value: `${state.currentStreak} · best ${state.bestStreaks[state.mode]}` },
-          { label: 'Time', value: formatClock(seconds) },
+          { label: t('streak'), value: t('streakValue', { n: num(state.currentStreak), best: num(state.bestStreaks[state.mode]) }) },
+          { label: k('time'), value: formatClock(seconds) },
         ]}
       />
 
@@ -332,13 +343,13 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
 
         <aside className={styles.side}>
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Game</h2>
+            <h2 className="arc-panel__title">{t('panelGame')}</h2>
             <div className={styles.buttons}>
               <button type="button" className="arc-btn arc-btn--primary" onClick={primaryClick}>
                 {primaryLabel}
               </button>
               <button type="button" className="arc-btn" onClick={newRound} disabled={state.status === 'idle'}>
-                New round
+                {t('newRound')}
               </button>
             </div>
             <button
@@ -347,7 +358,7 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
               onClick={requestReset}
               disabled={!hasMatch}
             >
-              Reset match <kbd className="arc-kbd">C</kbd>
+              {t('resetMatch')} <kbd className="arc-kbd">C</kbd>
             </button>
             <div className={styles.save}>
               <SaveBadge savedAt={state.status !== 'idle' ? savedAt : null} onDiscard={discardSave} />
@@ -355,19 +366,20 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Mode</h2>
+            <h2 className="arc-panel__title">{t('panelMode')}</h2>
             <ModeSelect mode={state.mode} onChange={selectMode} />
             <p className={styles.note}>
               {ranked
-                ? `Ranked: a win pays ${DUEL_BASE_POINTS[state.mode as Exclude<Mode, 'pvp'>]}–${
-                    DUEL_BASE_POINTS[state.mode as Exclude<Mode, 'pvp'>] * 2
-                  } (faster wins pay more), a draw a quarter. Changing mode starts a new match.`
-                : 'Two players on one device. Unranked — rounds count as plays only.'}
+                ? t('noteRanked', {
+                    min: num(DUEL_BASE_POINTS[state.mode as Exclude<Mode, 'pvp'>]),
+                    max: num(DUEL_BASE_POINTS[state.mode as Exclude<Mode, 'pvp'>] * 2),
+                  })
+                : t('notePvp')}
             </p>
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Settings</h2>
+            <h2 className="arc-panel__title">{t('panelSettings')}</h2>
             <div className={styles.settings}>
               <AISpeedToggle speed={aiSpeed} onChange={setAISpeed} disabled={state.mode === 'pvp'} />
               <IconStyleToggle style={iconStyle} onChange={setIconStyle} />
@@ -376,8 +388,8 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Keys</h2>
-            <KeyHelp rows={KEYS} />
+            <h2 className="arc-panel__title">{t('panelKeys')}</h2>
+            <KeyHelp rows={keyRows(t)} />
           </section>
         </aside>
       </div>

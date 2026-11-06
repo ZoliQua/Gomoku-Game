@@ -1,5 +1,7 @@
 import { memo } from 'react';
+import { useMessages } from '../arcade';
 import type { IconStyle } from '../hooks/useIconStyle';
+import { MESSAGES, type GomokuMessageKey } from '../i18n';
 import { BOARD_SIZE } from '../logic/constants';
 import type { Cell as CellValue } from '../logic/types';
 import styles from './GameBoard.module.css';
@@ -18,12 +20,21 @@ export type CellProps = {
   onFocusCell: (index: number) => void;
 };
 
-const ariaForValue = (index: number, value: CellValue, iconStyle: IconStyle): string => {
+const PIECE_KEY: Record<IconStyle, Record<'B' | 'W', GomokuMessageKey>> = {
+  stone: { B: 'blackStone', W: 'whiteStone' },
+  tooth: { B: 'blackTooth', W: 'whiteTooth' },
+};
+
+const ariaForValue = (
+  index: number,
+  value: CellValue,
+  iconStyle: IconStyle,
+  t: (key: GomokuMessageKey, vars?: Record<string, string | number>) => string,
+): string => {
   const row = Math.floor(index / BOARD_SIZE) + 1;
   const col = (index % BOARD_SIZE) + 1;
-  if (value === null) return `Row ${row}, column ${col}, empty`;
-  const noun = iconStyle === 'tooth' ? 'tooth' : 'stone';
-  return `Row ${row}, column ${col}, ${value === 'B' ? 'black' : 'white'} ${noun}`;
+  if (value === null) return t('cellEmpty', { row, col });
+  return t('cellPiece', { row, col, piece: t(PIECE_KEY[iconStyle][value]) });
 };
 
 const Piece = ({ value, iconStyle }: { value: 'B' | 'W'; iconStyle: IconStyle }) =>
@@ -45,6 +56,7 @@ export const Cell = memo(function Cell({
   onSelect,
   onFocusCell,
 }: CellProps) {
+  const t = useMessages(MESSAGES);
   const canPlace = isInteractive && value === null;
   return (
     <button
@@ -58,7 +70,7 @@ export const Cell = memo(function Cell({
       ]
         .filter(Boolean)
         .join(' ')}
-      aria-label={ariaForValue(index, value, iconStyle)}
+      aria-label={ariaForValue(index, value, iconStyle, t)}
       aria-disabled={!canPlace}
       onClick={() => {
         if (canPlace) onSelect(index);

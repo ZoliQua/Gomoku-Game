@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadSession, readStats, saveSession } from './arcade';
+import { formatNumber, loadSession, readStats, saveSession } from './arcade';
 import { GomokuDemo } from './demo/GomokuDemo';
 import { GomokuGame } from './GomokuGame';
 import { advanceGame, createInitialState } from './logic/game';
@@ -135,7 +135,7 @@ describe('<GomokuGame />', () => {
     const won = advanceGame(aboutToWin('hard'), { type: 'place', index: idx(7, 7) }, { rng: () => 0 });
     seed(won);
     render(<GomokuGame />);
-    expect(screen.getByRole('dialog', { name: 'Welcome back' }).textContent).toContain(`${won.points} points`);
+    expect(screen.getByRole('dialog', { name: 'Welcome back' }).textContent).toContain(`${formatNumber(won.points, 'en')} points`);
     expect(stones()).toBe(0);
     expect(readStats('gomoku').plays).toBe(0); // the finished round is not re-recorded
   });

@@ -1,5 +1,7 @@
 import { memo, useMemo } from 'react';
+import { useMessages } from '../arcade';
 import type { IconStyle } from '../hooks/useIconStyle';
+import { MESSAGES } from '../i18n';
 import { BOARD_SIZE } from '../logic/constants';
 import type { Board, WinningLine as Line } from '../logic/types';
 import { Cell } from './Cell';
@@ -40,6 +42,7 @@ export const GameBoard = memo(function GameBoard({
   variant = 'full',
 }: GameBoardProps) {
   const winningSet = useMemo(() => (winningLine ? new Set(winningLine) : null), [winningLine]);
+  const t = useMessages(MESSAGES);
 
   if (variant === 'mini') {
     return (
@@ -69,7 +72,7 @@ export const GameBoard = memo(function GameBoard({
 
   return (
     <div className={styles.frame}>
-      <div className={styles.board} role="group" aria-label="Gomoku board" style={gridStyle}>
+      <div className={styles.board} role="group" aria-label={t('board')} style={gridStyle}>
         <GobanBackground />
         {board.map((value, index) => (
           <Cell
