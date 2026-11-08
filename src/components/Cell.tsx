@@ -80,7 +80,13 @@ export const Cell = memo(function Cell({
       data-index={index}
     >
       {value !== null && (
-        <span className={`${styles.piece} ${iconStyle === 'tooth' ? styles.tooth : ''}`} aria-hidden="true">
+        <span
+          className={`${styles.piece} ${iconStyle === 'tooth' ? styles.tooth : ''}`}
+          aria-hidden="true"
+          {...(iconStyle === 'tooth'
+            ? { 'data-testid': 'gomoku-piece-tooth', 'data-shape': value === 'B' ? 'molar' : 'incisor' }
+            : {})}
+        >
           <Piece value={value} iconStyle={iconStyle} />
         </span>
       )}

@@ -14,7 +14,7 @@ export type GomokuMessageKey =
   | 'panelGame' | 'panelMode' | 'panelSettings' | 'panelKeys'
   | 'noteRanked' | 'notePvp'
   | 'modeGroup' | 'modePvp' | 'modeEasy' | 'modeMedium' | 'modeHard'
-  | 'pieces' | 'pieceStyle' | 'stones' | 'teeth' | 'stonesHint' | 'teethHint'
+  | 'dentalHint'
   | 'aiDelay' | 'speedInstant' | 'speedFast' | 'speedNormal' | 'speedSlow'
   | 'sound' | 'on' | 'off'
   | 'board' | 'cellEmpty' | 'cellPiece' | 'blackStone' | 'whiteStone' | 'blackTooth' | 'whiteTooth'
@@ -64,12 +64,7 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     modeEasy: 'Easy',
     modeMedium: 'Medium',
     modeHard: 'Hard',
-    pieces: 'Pieces',
-    pieceStyle: 'Piece style',
-    stones: 'Stones',
-    teeth: 'Teeth',
-    stonesHint: 'Classic black / white stones (I)',
-    teethHint: 'Black / white tooth icons (I)',
+    dentalHint: 'Board pieces become teeth: black molars, white incisors (I)',
     aiDelay: 'AI delay',
     speedInstant: 'Instant',
     speedFast: 'Fast (150 ms)',
@@ -91,7 +86,7 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     keyPause: 'Pause / resume',
     keyNewRound: 'New round',
     keyMode: 'Cycle / pick mode',
-    keyIcons: 'Stones ↔ teeth',
+    keyIcons: 'Dental mode (stones ↔ teeth)',
     keyReset: 'Reset match',
   },
   hu: {
@@ -136,12 +131,7 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     modeEasy: 'Könnyű',
     modeMedium: 'Közepes',
     modeHard: 'Nehéz',
-    pieces: 'Bábuk',
-    pieceStyle: 'Bábustílus',
-    stones: 'Kövek',
-    teeth: 'Fogak',
-    stonesHint: 'Klasszikus fekete / fehér kövek (I)',
-    teethHint: 'Fekete / fehér fog ikonok (I)',
+    dentalHint: 'A táblán a bábuk fogak lesznek: fekete őrlőfog, fehér metszőfog (I)',
     aiDelay: 'Gép késleltetése',
     speedInstant: 'Azonnali',
     speedFast: 'Gyors (150 ms)',
@@ -163,7 +153,7 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     keyPause: 'Szünet / folytatás',
     keyNewRound: 'Új kör',
     keyMode: 'Mód léptetése / választása',
-    keyIcons: 'Kövek ↔ fogak',
+    keyIcons: 'Fogas mód (kövek ↔ fogak)',
     keyReset: 'Meccs nullázása',
   },
   de: {
@@ -208,12 +198,7 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     modeEasy: 'Leicht',
     modeMedium: 'Mittel',
     modeHard: 'Schwer',
-    pieces: 'Steine',
-    pieceStyle: 'Steinstil',
-    stones: 'Steine',
-    teeth: 'Zähne',
-    stonesHint: 'Klassische schwarze / weiße Steine (I)',
-    teethHint: 'Schwarze / weiße Zahn-Symbole (I)',
+    dentalHint: 'Die Spielsteine werden zu Zähnen: schwarze Backenzähne, weiße Schneidezähne (I)',
     aiDelay: 'KI-Verzögerung',
     speedInstant: 'Sofort',
     speedFast: 'Schnell (150 ms)',
@@ -235,7 +220,7 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     keyPause: 'Pause / weiter',
     keyNewRound: 'Neue Runde',
     keyMode: 'Modus wechseln / wählen',
-    keyIcons: 'Steine ↔ Zähne',
+    keyIcons: 'Zahnmodus (Steine ↔ Zähne)',
     keyReset: 'Partie zurücksetzen',
   },
 };

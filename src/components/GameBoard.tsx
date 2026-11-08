@@ -71,7 +71,7 @@ export const GameBoard = memo(function GameBoard({
   }
 
   return (
-    <div className={styles.frame}>
+    <div className={styles.frame} data-dental={iconStyle === 'tooth' ? 'true' : 'false'}>
       <div className={styles.board} role="group" aria-label={t('board')} style={gridStyle}>
         <GobanBackground />
         {board.map((value, index) => (

@@ -182,9 +182,9 @@ Medium follows a 5-step priority: **win-now → block-win → make-live-four →
 ## ⚫⚪ Stones & teeth
 
 - ⚫⚪ **Stones** *(default)* — go-style stones with radial gradients over a warm wood goban.
-- 🦷 **Teeth** — black and white tooth silhouettes in the same positions.
+- 🦷 **Teeth** — the arcade-wide **Dental mode**: black molars and white incisors (different shapes, not just colours) in the same positions.
 
-Switch in **Settings** or with **I**; stored under `gomoku.iconStyle`. The model is unchanged (`'B'` / `'W'`), only rendering swaps.
+Switch with the **Dental mode** row in **Settings**, the arcade top bar, or **I**; stored in the shared `arcade.dental` preference. An old `gomoku.iconStyle = 'tooth'` choice is migrated once (only if dental mode was never set) and the old key removed. The model is unchanged (`'B'` / `'W'`), only rendering swaps.
 Board tokens (`--gmk-board-bg`, `--gmk-grid-line`, `--gmk-tooth-*`) live on the board frame in `GameBoard.module.css`; the last-move dot and winning line use the kit's `--danger` / `--ok`.
 
 ## 🧪 Scripts
@@ -214,7 +214,7 @@ src/
     *.test.ts        rules, AI, scoring, persist, demo
   hooks/             useAITurn, useGomokuKeys, useBestStreak, useAIDelay, useIconStyle, useSound
   components/        GameBoard (full + mini), Cell, Stone, ToothIcon, GobanBackground, WinningLine,
-                     ModeSelect, AISpeedToggle, IconStyleToggle, SoundToggle
+                     ModeSelect, AISpeedToggle, DentalToggle, SoundToggle
   demo/GomokuDemo.tsx landing-page attract mode
   GomokuGame.tsx     the embeddable game (ArcadeGameProps)
   App.tsx            standalone page: <ArcadeShell><GomokuGame/></ArcadeShell>

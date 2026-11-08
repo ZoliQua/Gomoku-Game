@@ -28,8 +28,8 @@
 * **Scoring**: only `duelRoundScore` from the kit (`logic/scoring.ts`): difficulty = mode (`null` for PvP → `ranked: false`), moves = stones on board, boardCells = 225, outcome from the human side (PvP: `draw` if drawn else `win`). The reducer stores `roundScore` (0 while in play) and adds it to `points` (match total). `useArcadeRun` gets `score = roundScore`.
 * **Stat panel**: Points (match), Best (`stats.best`, best single ranked round), W–L–D (B–W–D in PvP), Streak (current · best for the mode), Time (`useRunTimer`, per round, pause-aware).
 * **Session**: `arcade.session.gomoku`, schema 1, validated by `isGomokuState` (logic/persist.ts). Saved whenever status ≠ `idle` — including after a finished round, so the match (tally, points, streak) survives between rounds. Restore is always paused + "Welcome back"; a save of a finished round resumes as the next empty round (never re-scored). Discarded only on Reset match / Discard (both return to `idle`).
-* **Local settings keys (unchanged)**: `gomoku.iconStyle`, `gomoku.aiSpeed`, `gomoku.soundEnabled`, `gomoku.highScore.<mode>` (best **streaks**; legacy `gomoku.highScore` migrates to Hard). The registry must **not** declare `gomoku.highScore` as `legacyBestKey` — it is a streak, not a score.
-* **Keys**: arrows/WASD cursor · Space/Enter primary (start / place / resume / next round) · P/Esc pause · R new round · N / 1–4 mode · I stones↔teeth · C reset match (Enter confirm, Esc cancel). T is the arcade theme key — never bind it.
+* **Local settings keys**: `gomoku.aiSpeed`, `gomoku.soundEnabled`, `gomoku.highScore.<mode>` (best **streaks**; legacy `gomoku.highScore` migrates to Hard). The registry must **not** declare `gomoku.highScore` as `legacyBestKey` — it is a streak, not a score. Stones ↔ teeth is the shared dental mode (`arcade.dental`, `useIconStyle` wraps `useDental`); the old `gomoku.iconStyle` key is migrated once (`'tooth'` → `applyDental(true)` if dental was never set) and removed.
+* **Keys**: arrows/WASD cursor · Space/Enter primary (start / place / resume / next round) · P/Esc pause · R new round · N / 1–4 mode · I stones↔teeth (dental mode) · C reset match (Enter confirm, Esc cancel). T is the arcade theme key — never bind it.
 * **AI delay**: Instant / 150 / 350 / 1000 ms (`useAIDelay`). `useAITurn` cancels on move, pause, new round, mode change, confirm dialog and unmount.
 * **Sound**: Web Audio cues in `GomokuGame` only — never in the demo.
 * **Demo**: `GomokuDemo` — Medium vs Medium (3 random opening plies) on the real reducer, 300 ms per ply, restart 1.5 s after a round; `GameBoard variant="mini"` (no buttons, CSS discs); no keys, stats, saves, sound or storage writes.
@@ -71,7 +71,7 @@ src/
     *.test.ts
   hooks/               useAITurn, useGomokuKeys, useBestStreak, useAIDelay, useIconStyle, useSound
   components/          GameBoard (+ .module.css, full | mini), Cell, Stone, ToothIcon,
-                       GobanBackground, WinningLine, ModeSelect, AISpeedToggle, IconStyleToggle, SoundToggle
+                       GobanBackground, WinningLine, ModeSelect, AISpeedToggle, DentalToggle, SoundToggle
   demo/GomokuDemo.tsx  landing-page attract mode
   GomokuGame.tsx       embeddable game (ArcadeGameProps) + GomokuGame.module.css + GomokuGame.test.tsx
   App.tsx main.tsx     standalone page (ArcadeShell; main imports arcade.css, applies theme)

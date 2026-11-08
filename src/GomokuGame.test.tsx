@@ -155,7 +155,7 @@ describe('<GomokuGame />', () => {
     expect(stones()).toBe(0);
   });
 
-  it('I toggles stones ↔ teeth; T is left to the arcade theme', () => {
+  it('I toggles stones ↔ teeth (shared dental mode); T is left to the arcade theme', () => {
     const { container } = render(<GomokuGame />);
     const root = container.querySelector('.gmk-app') as HTMLElement;
     expect(root.dataset.iconStyle).toBe('stone');
@@ -163,7 +163,7 @@ describe('<GomokuGame />', () => {
     expect(root.dataset.iconStyle).toBe('stone');
     act(() => key('i'));
     expect(root.dataset.iconStyle).toBe('tooth');
-    expect(localStorage.getItem('gomoku.iconStyle')).toBe('tooth');
+    expect(localStorage.getItem('arcade.dental')).toBe('1'); // the shared dental mode
   });
 
   it('ignores hotkeys while typing in a field', () => {
