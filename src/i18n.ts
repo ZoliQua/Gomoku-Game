@@ -4,9 +4,9 @@ import type { Mode } from './logic/types';
 /** Every visible Gomoku string in English, Hungarian and German. */
 export type GomokuMessageKey =
   | 'subStone' | 'subTooth'
-  | 'points' | 'streak' | 'streakValue' | 'tallyPvp' | 'tallyDuel'
-  | 'turnBlack' | 'turnWhite' | 'yourTurn' | 'aiThinking'
-  | 'draw' | 'blackWins' | 'whiteWins' | 'youWin' | 'aiWins'
+  | 'points' | 'streak' | 'streakValue' | 'tallyPvp' | 'tallyPvpTooth' | 'tallyDuel'
+  | 'turnBlack' | 'turnWhite' | 'turnMolar' | 'turnIncisor' | 'yourTurn' | 'aiThinking'
+  | 'draw' | 'blackWins' | 'whiteWins' | 'molarWins' | 'incisorWins' | 'youWin' | 'aiWins'
   | 'resetTitle' | 'resetBody' | 'resetMatch' | 'keepPlaying'
   | 'idleBodyRanked' | 'idleBodyUnranked'
   | 'welcomeBody' | 'continue' | 'newRound' | 'nextRound' | 'pausedBody'
@@ -29,14 +29,19 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     streak: 'Streak',
     streakValue: '{n} · best {best}',
     tallyPvp: 'B–W–D',
+    tallyPvpTooth: 'M–I–D',
     tallyDuel: 'W–L–D',
     turnBlack: 'Black to move',
     turnWhite: 'White to move',
+    turnMolar: 'Molar to move',
+    turnIncisor: 'Incisor to move',
     yourTurn: 'Your turn',
     aiThinking: 'AI thinking…',
     draw: "It's a draw",
     blackWins: 'Black wins!',
     whiteWins: 'White wins!',
+    molarWins: 'Molar wins!',
+    incisorWins: 'Incisor wins!',
     youWin: 'You win!',
     aiWins: 'The AI wins',
     resetTitle: 'Reset match?',
@@ -96,14 +101,19 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     streak: 'Sorozat',
     streakValue: '{n} · rekord {best}',
     tallyPvp: 'Fek–Feh–D',
+    tallyPvpTooth: 'Őrl–Met–D',
     tallyDuel: 'Gy–V–D',
     turnBlack: 'Fekete lép',
     turnWhite: 'Fehér lép',
+    turnMolar: 'Őrlőfog lép',
+    turnIncisor: 'Metszőfog lép',
     yourTurn: 'Te jössz',
     aiThinking: 'A gép gondolkodik…',
     draw: 'Döntetlen',
     blackWins: 'A fekete nyert!',
     whiteWins: 'A fehér nyert!',
+    molarWins: 'Az őrlőfog nyert!',
+    incisorWins: 'A metszőfog nyert!',
     youWin: 'Nyertél!',
     aiWins: 'A gép nyert',
     resetTitle: 'Nullázod a meccset?',
@@ -163,14 +173,19 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     streak: 'Serie',
     streakValue: '{n} · Bestwert {best}',
     tallyPvp: 'S–W–U',
+    tallyPvpTooth: 'B–S–U',
     tallyDuel: 'S–N–U',
     turnBlack: 'Schwarz am Zug',
     turnWhite: 'Weiß am Zug',
+    turnMolar: 'Backenzahn am Zug',
+    turnIncisor: 'Schneidezahn am Zug',
     yourTurn: 'Du bist dran',
     aiThinking: 'KI denkt nach…',
     draw: 'Unentschieden',
     blackWins: 'Schwarz gewinnt!',
     whiteWins: 'Weiß gewinnt!',
+    molarWins: 'Backenzahn gewinnt!',
+    incisorWins: 'Schneidezahn gewinnt!',
     youWin: 'Du gewinnst!',
     aiWins: 'Die KI gewinnt',
     resetTitle: 'Partie zurücksetzen?',

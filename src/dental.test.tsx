@@ -102,6 +102,38 @@ describe('Gomoku dental mode', () => {
   });
 });
 
+describe('Gomoku dental mode player names', () => {
+  it('names the players by shape — molar (black) and incisor (white) — in every language', () => {
+    applyDental(true, { silent: true });
+    saveSession('gomoku', {
+      schema: 1,
+      data: {
+        ...midRound(),
+        mode: 'pvp',
+        board: boardWith([
+          [7, 3, 'B'], [7, 4, 'B'], [7, 5, 'B'], [7, 6, 'B'],
+          [0, 0, 'W'], [0, 2, 'W'], [0, 4, 'W'], [0, 6, 'W'],
+        ]),
+        points: 0,
+        scores: { black: 0, white: 0, draws: 0 },
+      },
+      seconds: 30,
+      score: 0,
+    });
+    render(<GomokuGame />);
+    act(() => key('p')); // continue the restored round
+    expect(screen.getByRole('status').textContent).toBe('Molar to move');
+    expect(stat('M–I–D')).toBe('0–0–0');
+    act(() => applyLang('hu'));
+    expect(screen.getByRole('status').textContent).toBe('Őrlőfog lép');
+    act(() => applyLang('de'));
+    expect(screen.getByRole('status').textContent).toBe('Backenzahn am Zug');
+    act(() => applyLang('en'));
+    act(() => key('Enter')); // black (the molar) completes five
+    expect(screen.getByRole('dialog', { name: 'Molar wins!' })).toBeTruthy();
+  });
+});
+
 describe('legacy icon-style migration', () => {
   it('an old „tooth” choice turns dental mode on once and the old key is removed', () => {
     localStorage.setItem('gomoku.iconStyle', 'tooth');

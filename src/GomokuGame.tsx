@@ -57,22 +57,29 @@ const keyRows = (t: T): [string, string][] => [
 const rng = () => Math.random();
 const reducer = (state: GameState, action: GameAction): GameState => advanceGame(state, action, { rng });
 
-const tally = (state: GameState, t: T, num: (n: number) => string): { label: string; value: string } => {
+/* Dental mode draws black pieces as molars and white ones as incisors, so PvP texts name the shape. */
+const tally = (state: GameState, t: T, num: (n: number) => string, dental: boolean): { label: string; value: string } => {
   const { black, white, draws } = state.scores;
-  if (state.mode === 'pvp') return { label: t('tallyPvp'), value: `${num(black)}–${num(white)}–${num(draws)}` };
+  if (state.mode === 'pvp') return { label: t(dental ? 'tallyPvpTooth' : 'tallyPvp'), value: `${num(black)}–${num(white)}–${num(draws)}` };
   const human = state.humanStone === 'B' ? black : white;
   const ai = state.humanStone === 'B' ? white : black;
   return { label: t('tallyDuel'), value: `${num(human)}–${num(ai)}–${num(draws)}` };
 };
 
-const turnLabel = (state: GameState, t: T): string => {
-  if (state.mode === 'pvp') return t(state.current === 'B' ? 'turnBlack' : 'turnWhite');
+const turnLabel = (state: GameState, t: T, dental: boolean): string => {
+  if (state.mode === 'pvp') {
+    if (dental) return t(state.current === 'B' ? 'turnMolar' : 'turnIncisor');
+    return t(state.current === 'B' ? 'turnBlack' : 'turnWhite');
+  }
   return t(isHumanTurn(state) ? 'yourTurn' : 'aiThinking');
 };
 
-const resultTitle = (state: GameState, t: T): string => {
+const resultTitle = (state: GameState, t: T, dental: boolean): string => {
   if (state.status === 'draw' || state.winner === null) return t('draw');
-  if (state.mode === 'pvp') return t(state.winner === 'B' ? 'blackWins' : 'whiteWins');
+  if (state.mode === 'pvp') {
+    if (dental) return t(state.winner === 'B' ? 'molarWins' : 'incisorWins');
+    return t(state.winner === 'B' ? 'blackWins' : 'whiteWins');
+  }
   return t(state.winner === state.humanStone ? 'youWin' : 'aiWins');
 };
 
@@ -233,7 +240,7 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
   const best = Math.max(stats.best, state.roundScore);
   const newBest = status === 'gameOver' && state.roundScore > 0 && state.roundScore > stats.bestBeforeRun;
   const ranked = isRanked(state.mode);
-  const record = tally(state, t, num);
+  const record = tally(state, t, num, iconStyle === 'tooth');
   const modeLabel = t(MODE_KEY[state.mode]);
   const interactive = state.status === 'playing' && isHumanTurn(state) && !confirmReset;
 
@@ -273,7 +280,7 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
         };
   } else if (status === 'gameOver') {
     overlay = {
-      title: resultTitle(state, t),
+      title: resultTitle(state, t, iconStyle === 'tooth'),
       message: ranked
         ? t(newBest ? 'roundNewBest' : 'roundRanked', { round: num(state.roundScore), points: num(state.points), best: num(best) })
         : t('roundPvp', { tally: record.label, record: record.value }),
@@ -316,7 +323,7 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
 
       <StatPanel
         status={status}
-        statusLabel={status === 'running' ? turnLabel(state, t) : undefined}
+        statusLabel={status === 'running' ? turnLabel(state, t, iconStyle === 'tooth') : undefined}
         items={[
           { label: t('points'), value: num(state.points) },
           { label: k('best'), value: num(best), highlight: newBest },
