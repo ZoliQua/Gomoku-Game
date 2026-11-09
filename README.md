@@ -57,11 +57,12 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 🔄 **Loser-goes-first** — the previous round's loser opens the next one (draws alternate)
 - ⏸️ **Pause** (P / Esc) freezes input, the AI and the timer
 - 💾 **Autosave & resume** — the whole match (board, tally, points, streak) survives reloads and portal tab switches
-- 🦷 **Stones ↔ Teeth** icon toggle (persisted)
 - ⚡ **AI delay** — Instant / 0.15 s / 0.35 s / 1 s, persisted
 - 🔔 **Optional sound** — procedural Web Audio click / win / draw cues, off by default
 - 🎯 **Last-move marker** and an animated winning-line strike
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**)
+- 🌍 **Three languages** — English, Hungarian and German; switch in the top bar or in the settings (also `?lang=en|hu|de` for link hand-off); numbers follow the locale's grouping
+- 🦷 **Dental mode** — a „Fogas mód” / "Dental mode" / „Zahnmodus” toggle in the settings, off by default (or `?dental=1`), shared across the whole arcade: the stones become teeth (the former Stones ↔ Teeth toggle is now the shared mode; an old `gomoku.iconStyle = 'tooth'` choice is migrated once to `arcade.dental`); presentation only
 - 🤖 **Attract-mode demo** (`<GomokuDemo />`) — the real engine, Medium AI vs Medium AI, on the portal's landing page
 - ⌨️ **Keyboard-first**; hotkeys are ignored while you type in a form field
 - 🧪 **Tested** — rules, AI, scoring, save validation and component behaviour with Vitest + Testing Library
