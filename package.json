@@ -1,7 +1,7 @@
 {
   "name": "gomoku-game",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.2.1",
   "type": "module",
   "description": "Type-safe Gomoku (Five in a Row) on a 15×15 goban in React + Vite + TypeScript — PvP or three AI levels incl. α-β minimax, stones ↔ teeth, autosave & resume, shared Zoltan’s Arcade stats. Part of Arcade-Game-Center.",
   "license": "MIT",
