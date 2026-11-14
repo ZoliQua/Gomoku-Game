@@ -1,7 +1,9 @@
 # ⚫⚪ Gomoku — Five in a Row
 
-A minimal, type-safe **Gomoku** (Five in a Row) on a **15 × 15 goban**, built with **React 18**, **Vite** and **TypeScript** — keyboard-first, grid-based DOM, no canvas, no game engine. Play a friend or three AI levels up to α-β minimax, with a one-click **stones ↔ teeth** toggle.
-Runs on its own **and** as one of the fourteen games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)**.
+**English** · [Deutsch](README.de.md) · [Magyar](README.hu.md)
+
+A minimal, type-safe **Gomoku** (Five in a Row) on a **15 × 15 goban**, built with **React 18**, **Vite** and **TypeScript** — keyboard- and touch-friendly, grid-based DOM, no canvas, no game engine. Play a friend or three AI levels up to α-β minimax, with a one-click **stones ↔ teeth** toggle.
+Runs on its own **and** as one of the fifteen games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)**.
 
 [![CI](https://github.com/ZoliQua/Gomoku-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Gomoku-Game/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -50,6 +52,7 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 💣 Minesweeper | [Minesweeper-Game](https://github.com/ZoliQua/Minesweeper-Game) | Logic |
 | ♠️ Solitaire | [Solitaire-Game](https://github.com/ZoliQua/Solitaire-Game) | Cards |
 | 🎴 Ulti | [Ulti-Game](https://github.com/ZoliQua/Ulti-Game) | Cards |
+| 🂡 Snapszer | [Snapszer-Game](https://github.com/ZoliQua/Snapszer-Game) | Cards |
 
 ## ✨ Features
 
@@ -62,7 +65,9 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 💾 **Autosave & resume** — the whole match (board, tally, points, streak) survives reloads and portal tab switches
 - ⚡ **AI delay** — Instant / 0.15 s / 0.35 s / 1 s, persisted
 - 🔔 **Optional sound** — procedural Web Audio click / win / draw cues, off by default
-- 🎯 **Last-move marker** and an animated winning-line strike
+- 📖 **Rules dialog** with a five-in-a-row diagram (opening it pauses the round), a **Finish** button that ends the round early and ranks its score, and a **Full screen** button
+- 📱 **Phone-ready** — tap an intersection, the board spans the full screen width (cells of at least 24 px at 360 px), a ringed last-move marker, iPhone full-screen mode
+- 🎯 **Last-move ring marker** and an animated winning-line strike
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**)
 - 🌍 **Three languages** — English, Hungarian and German; switch in the top bar or in the settings (also `?lang=en|hu|de` for link hand-off); numbers follow the locale's grouping
 - 🦷 **Dental mode** — a „Fogas mód” / "Dental mode" / „Zahnmodus” toggle in the settings, off by default (or `?dental=1`), shared across the whole arcade: the stones become teeth (the former Stones ↔ Teeth toggle is now the shared mode; an old `gomoku.iconStyle = 'tooth'` choice is migrated once to `arcade.dental`); presentation only
@@ -97,6 +102,8 @@ Production build: `npm run build && npm run preview`. The build uses relative as
 | **C** | Reset match (asks first: **Enter** confirms, **Esc** cancels) |
 | **T** | Toggle dark / light theme (standalone page) |
 
+**On a phone:** tap the intersection you want; the board runs edge to edge, so each intersection is at least 24 px wide even at 360 px. The stone with a ring around it is the last move. The **Rules**, **Finish** and **Full screen** buttons are in the Game panel. On iPhone, add the page to the Home Screen for a view without browser bars. **Finish** ends the round on the spot and ranks the round score (0 while the round is in play); the **R** key stays the new-round key, so the Rules dialog opens with its button only.
+
 Arrow keys call `preventDefault()` so the page never scrolls during play. Cells are real `<button>`s with labels such as "Row 8, column 8, black stone".
 
 > Changed in 2.0: **Esc** now pauses (arcade standard) instead of resetting scores, reset moved to the **Reset match** button / **C** (same key as Tic-Tac-Toe); the icon toggle moved from **T** (now the arcade theme key) to **I**.
@@ -130,7 +137,7 @@ The whole match is saved about once a second and whenever the page is hidden or 
 win state must all agree). Reloading shows **Welcome back** with the match paused. Unlike score-attack games, a finished
 round does **not** clear the save: the match tally and points carry over between rounds, and a save taken right after a
 round resumes as the next, empty round (the finished round is never scored twice). The save is dropped only by
-**Reset match** or **Discard** next to the *Autosaved* badge.
+**Reset match**, **Discard** next to the *Autosaved* badge, or **Finish** (which ends the round early).
 
 ## 🧩 Embedding in Arcade-Game-Center
 
@@ -139,7 +146,7 @@ import { GomokuGame, GomokuDemo } from '@arcade/gomoku';
 
 <GomokuGame
   embedded                                   // hide the page title; the portal shows it
-  onGameOver={(score) => submitScore('gomoku', score)}   // ranked rounds with points only
+  onGameOver={(score) => submitScore('gomoku', score)}   // ranked rounds with points, or finished early
   onRunEnd={(run) => log(run.outcome, run.ranked)}       // every finished round
   onStatusChange={({ status, score, seconds }) => updateHeader(status, seconds)}
 />
@@ -147,15 +154,16 @@ import { GomokuGame, GomokuDemo } from '@arcade/gomoku';
 ```
 
 Both components follow the shared `ArcadeGameProps` / `ArcadeDemoProps` contract from `src/arcade/types.ts`.
-Status mapping: `idle` (before the first round) · `running` (round in play) · `paused` · `gameOver` (round won or drawn);
+Status mapping: `idle` (before the first round) · `running` (round in play) · `paused` · `gameOver` (round won, drawn or finished early);
 the run key is the round counter, `score` is the round's points (0 until it ends).
 
 ## 🧠 How it works
 
 ```
 idle ─(start)→ playing ⇄ paused
-                 ├─ five or more in a row ─→ won  ─┐
-                 └─ 225 stones, no five ───→ draw ─┴─(new round)→ playing
+                 ├─ five or more in a row ─→ won ──────┐
+                 ├─ 225 stones, no five ───→ draw ─────┼─(new round)→ playing
+                 └─ Finish early ──────────→ finished ─┘
 ```
 
 `advanceGame(state, action, ctx): GameState` owns every transition:
@@ -165,7 +173,8 @@ idle ─(start)→ playing ⇄ paused
 3. **Win check first** — `checkWinAt(board, lastIndex)` scans only the four lines through the last stone. Then the draw check (full board). A winning 225th stone is a win, never a draw.
 4. **Round end** — tally, streak (human wins only), best streak (never decreases) and the round score (`duelRoundScore`) added to the match points.
 5. **`newRound`** — empty board, loser opens, match kept. **`changeMode`** starts a new match. **`resetMatch`** returns to idle.
-6. **`pause` / `resume`** — while paused, `place` and `aiMove` are no-ops and `useAITurn` cancels its timer.
+6. **`finish`** — Finish early: the round ends without a winner and scores 0; it is reported as outcome `finished` (the score goes on the leaderboard even at 0) and the save is dropped.
+7. **`pause` / `resume`** — while paused, `place` and `aiMove` are no-ops and `useAITurn` cancels its timer.
 
 `useAITurn` dispatches `aiMove` after the chosen delay; a move, pause, new round, mode change or unmount cancels it.
 `useGomokuKeys` attaches one window listener for the component's lifetime.
@@ -189,7 +198,7 @@ Medium follows a 5-step priority: **win-now → block-win → make-live-four →
 - 🦷 **Teeth** — the arcade-wide **Dental mode**: black molars and white incisors (different shapes, not just colours) in the same positions.
 
 Switch with the **Dental mode** row in **Settings**, the arcade top bar, or **I**; stored in the shared `arcade.dental` preference. An old `gomoku.iconStyle = 'tooth'` choice is migrated once (only if dental mode was never set) and the old key removed. The model is unchanged (`'B'` / `'W'`), only rendering swaps.
-Board tokens (`--gmk-board-bg`, `--gmk-grid-line`, `--gmk-tooth-*`) live on the board frame in `GameBoard.module.css`; the last-move dot and winning line use the kit's `--danger` / `--ok`.
+Board tokens (`--gmk-board-bg`, `--gmk-grid-line`, `--gmk-tooth-*`) live on the board frame in `GameBoard.module.css`; the last-move ring and winning line use the kit's `--danger` / `--ok`.
 
 ## 🧪 Scripts
 
@@ -220,6 +229,7 @@ src/
   components/        GameBoard (full + mini), Cell, Stone, ToothIcon, GobanBackground, WinningLine,
                      ModeSelect, AISpeedToggle, DentalToggle, SoundToggle
   demo/GomokuDemo.tsx landing-page attract mode
+  rules.tsx          Rules dialog sections + the FiveDiagram
   GomokuGame.tsx     the embeddable game (ArcadeGameProps)
   App.tsx            standalone page: <ArcadeShell><GomokuGame/></ArcadeShell>
   main.tsx           entry; loads the shared arcade.css once
