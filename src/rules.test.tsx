@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyDental, applyLang, DUEL_BASE_POINTS, formatNumber } from './arcade';
+import { applyDental, applyLang, duelRoundScore, formatNumber } from './arcade';
 import { GomokuGame } from './GomokuGame';
 import { BOARD_SIZE, WIN_LENGTH } from './logic/constants';
 import { setCoarsePointer } from './test/touchEnv';
@@ -57,12 +57,27 @@ describe('Gomoku rules dialog', () => {
     expect(rulesDialog().textContent).toContain('Teljes képernyő');
   });
 
-  it('prints every scoring number', () => {
+  it('prints the real win ranges and the board numbers in full sentences', () => {
     render(<GomokuGame />);
     openRules();
     const text = rulesDialog().textContent ?? '';
-    const numbers = [BOARD_SIZE, WIN_LENGTH, ...Object.values(DUEL_BASE_POINTS), ...Object.values(DUEL_BASE_POINTS).map((n) => n * 2)];
-    for (const n of numbers) expect(text).toContain(formatNumber(n, 'hu'));
+    // Longest game = board full; shortest win = the opener's fifth stone (9 stones on the board).
+    const range = (difficulty: 'easy' | 'medium' | 'hard') => {
+      const pay = (moves: number) => duelRoundScore({ outcome: 'win', difficulty, moves, boardCells: BOARD_SIZE * BOARD_SIZE });
+      return `${formatNumber(pay(BOARD_SIZE * BOARD_SIZE), 'hu')}–${formatNumber(pay(2 * WIN_LENGTH - 1), 'hu')}`;
+    };
+    expect(text).toContain(
+      `Egy gép elleni győzelem ${range('easy')} (könnyű), ${range('medium')} (közepes) vagy ${range('hard')} (nehéz) pontot ér`,
+    );
+    expect(range('medium')).toBe('250–490'); // 250 × (1 + 216/225) = 490, guards the helper itself
+    expect(text).toContain(`Rakj le elsőként ${formatNumber(WIN_LENGTH, 'hu')} követ egy sorban`);
+    expect(text).toContain(`a ${formatNumber(BOARD_SIZE, 'hu')} × ${formatNumber(BOARD_SIZE, 'hu')}-es táblán`);
+    expect(text).toContain(`${formatNumber(WIN_LENGTH, 'hu')} vagy több kő egy sorban nyer (szabad gomoku: a ${formatNumber(WIN_LENGTH + 1, 'hu')} vagy több is számít)`);
+  });
+
+  it('the Mode panel note shows the same real range', () => {
+    render(<GomokuGame />);
+    expect(document.body.textContent).toContain('250–490 pontot ér');
   });
 
   it('has a described five-in-a-row diagram', () => {

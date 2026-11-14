@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type CSSProperties } from 'react';
 import {
-  DUEL_BASE_POINTS,
   FinishButton,
   formatClock,
   formatNumber,
@@ -39,7 +38,7 @@ import { useRulesSections } from './rules';
 import { advanceGame, arcadeStatusOf, createInitialState, isHumanTurn } from './logic/game';
 import { moveFocus } from './logic/grid';
 import { isGomokuState, restoreSavedState, wasRoundInProgress } from './logic/persist';
-import { isRanked, stateOutcome } from './logic/scoring';
+import { isRanked, stateOutcome, winScoreRange } from './logic/scoring';
 import type { GameAction, GameState, Mode } from './logic/types';
 import styles from './GomokuGame.module.css';
 
@@ -410,8 +409,8 @@ export function GomokuGame(props: ArcadeGameProps = {}) {
             <p className={styles.note}>
               {ranked
                 ? t('noteRanked', {
-                    min: num(DUEL_BASE_POINTS[state.mode as Exclude<Mode, 'pvp'>]),
-                    max: num(DUEL_BASE_POINTS[state.mode as Exclude<Mode, 'pvp'>] * 2),
+                    min: num(winScoreRange(state.mode as Exclude<Mode, 'pvp'>).min),
+                    max: num(winScoreRange(state.mode as Exclude<Mode, 'pvp'>).max),
                   })
                 : t('notePvp')}
             </p>

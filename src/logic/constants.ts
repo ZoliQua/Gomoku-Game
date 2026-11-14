@@ -2,6 +2,8 @@ import type { Mode } from './types';
 
 export const BOARD_SIZE = 15;
 export const WIN_LENGTH = 5;
+/** Fewest stones on the board when the first player wins: all of theirs plus one fewer of the opponent's. */
+export const MIN_WIN_MOVES = 2 * WIN_LENGTH - 1;
 export const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 export const CENTER_INDEX = Math.floor(TOTAL_CELLS / 2); // 112 for 15×15
 

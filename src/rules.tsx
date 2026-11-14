@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { DUEL_BASE_POINTS, formatNumber, useDental, useIsTouch, useKitMessages, useLang, useMessages, type RulesSection } from './arcade';
+import { formatNumber, useDental, useIsTouch, useKitMessages, useLang, useMessages, type RulesSection } from './arcade';
 import { Stone } from './components/Stone';
 import { ToothIcon } from './components/ToothIcon';
 import { MESSAGES } from './i18n';
-import { BOARD_SIZE } from './logic/constants';
+import { BOARD_SIZE, WIN_LENGTH } from './logic/constants';
+import { winScoreRange } from './logic/scoring';
 
 const STEP = 38;
 const PIECE = 34;
@@ -12,6 +13,7 @@ const PIECE = 34;
 export function FiveDiagram() {
   const m = useMessages(MESSAGES);
   const [dental] = useDental();
+  const [lang] = useLang();
   const X0 = 20;
   const at = (i: number) => X0 + i * STEP;
   const piece = (variant: 'black' | 'white', x: number, y: number) => (
@@ -21,7 +23,7 @@ export function FiveDiagram() {
   );
   const rowY = 84;
   return (
-    <svg viewBox="0 0 240 170" role="img" aria-label={m('rulesDiagramLabel')} style={{ width: '100%', maxWidth: 320, height: 'auto', display: 'block', margin: '8px auto' }}>
+    <svg viewBox="0 0 240 170" role="img" aria-label={m('rulesDiagramLabel', { win: formatNumber(WIN_LENGTH, lang) })} style={{ width: '100%', maxWidth: 320, height: 'auto', display: 'block', margin: '8px auto' }}>
       <rect x={4} y={30} width={232} height={134} rx={8} fill="#d2a05c" stroke="var(--panel-border-strong)" />
       <g stroke="rgba(60,38,14,0.85)" strokeWidth={1}>
         <path d={`M${X0} ${rowY + PIECE / 2}H${at(4) + PIECE}`} />
@@ -37,7 +39,7 @@ export function FiveDiagram() {
       <rect x={at(0) - 3} y={rowY - 3} width={at(4) + PIECE - at(0) + 6} height={PIECE + 6} rx={PIECE / 2} fill="none" stroke="var(--text)" strokeWidth={2} strokeDasharray="5 3" />
       <g fontSize="13" fontWeight="700" fill="var(--text)">
         <path d="M215 12l5 6 11-13" fill="none" stroke="var(--ok)" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-        <text x={X0} y={16}>{m('rulesDiagramCaption')}</text>
+        <text x={X0} y={16}>{m('rulesDiagramCaption', { win: formatNumber(WIN_LENGTH, lang) })}</text>
       </g>
     </svg>
   );
@@ -50,6 +52,10 @@ export function useRulesSections(): RulesSection[] {
   const [lang] = useLang();
   const touch = useIsTouch();
   const num = (n: number) => formatNumber(n, lang);
+  const range = (mode: 'easy' | 'medium' | 'hard') => {
+    const r = winScoreRange(mode);
+    return `${num(r.min)}–${num(r.max)}`;
+  };
   const ios = typeof navigator !== 'undefined' && /iP(hone|od)/.test(navigator.userAgent);
   const mobile: ReactNode = (
     <ul>
@@ -64,7 +70,7 @@ export function useRulesSections(): RulesSection[] {
       id: 'goal',
       body: (
         <>
-          <p>{m('rulesGoal', { size: num(BOARD_SIZE) })}</p>
+          <p>{m('rulesGoal', { size: num(BOARD_SIZE), win: num(WIN_LENGTH) })}</p>
           <FiveDiagram />
         </>
       ),
@@ -74,7 +80,7 @@ export function useRulesSections(): RulesSection[] {
       id: 'rules',
       body: (
         <ul>
-          <li>{m('rulesRulesBoard')}</li>
+          <li>{m('rulesRulesBoard', { win: num(WIN_LENGTH), over: num(WIN_LENGTH + 1) })}</li>
           <li>{m('rulesRulesOrder')}</li>
           <li>{m('rulesRulesSave')}</li>
         </ul>
@@ -85,9 +91,9 @@ export function useRulesSections(): RulesSection[] {
       body: (
         <p>
           {m('rulesScoringText', {
-            min: `${num(DUEL_BASE_POINTS.easy)}–${num(DUEL_BASE_POINTS.easy * 2)}`,
-            mid: `${num(DUEL_BASE_POINTS.medium)}–${num(DUEL_BASE_POINTS.medium * 2)}`,
-            max: `${num(DUEL_BASE_POINTS.hard)}–${num(DUEL_BASE_POINTS.hard * 2)}`,
+            min: range('easy'),
+            mid: range('medium'),
+            max: range('hard'),
           })}
         </p>
       ),

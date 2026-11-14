@@ -205,12 +205,18 @@
   }
 }
 
-/* Phones: the board runs edge to edge so an intersection is at least 24 px wide at 360 px. */
+/* Phones: the board takes its container's width (no viewport units for width) and never grows taller
+   than the visible height minus the page chrome, so it also fits a landscape phone. */
 @media (max-width: 880px) {
-  .frame {
-    width: min(100vw, 640px);
+  .frame:not(.mini) {
+    width: min(100%, 640px, max(300px, calc(100dvh - 150px)));
+    margin-inline: auto;
     padding: 0;
-    border-radius: 0;
-    border-inline: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Immersive mode: the whole area is the board's, only the stat strip and the padding are subtracted. */
+  :global(html[data-arcade-immersive]) .frame:not(.mini) {
+    width: min(100%, 640px, max(300px, calc(100dvh - 130px)));
   }
 }

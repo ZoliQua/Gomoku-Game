@@ -94,10 +94,10 @@
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
-  /* Bleed past the page gutter so the board can use the whole screen width. */
+  /* Sized from the container (the page column or the immersive area), never from the viewport width. */
   .boardWrap {
-    width: min(100vw, 640px);
-    margin-inline: calc(50% - min(50vw, 320px));
+    width: 100%;
+    min-width: 0;
     justify-self: stretch;
   }
 }

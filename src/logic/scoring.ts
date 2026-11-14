@@ -1,5 +1,5 @@
 import { duelRoundScore, type DuelDifficulty, type RunOutcome } from '../arcade';
-import { TOTAL_CELLS } from './constants';
+import { MIN_WIN_MOVES, TOTAL_CELLS } from './constants';
 import type { GameState, Mode, Stone } from './types';
 
 /** Arcade difficulty of a mode; PvP is unranked (null). */
@@ -34,6 +34,15 @@ export const roundScoreFor = (
     moves,
     boardCells: TOTAL_CELLS,
   });
+
+/**
+ * Lowest and highest points one won round pays in a ranked mode, from the real scoring helper:
+ * the longest game (board full) and the shortest possible win (the human opens and wins on their fifth stone).
+ */
+export const winScoreRange = (mode: Exclude<Mode, 'pvp'>): { min: number; max: number } => ({
+  min: roundScoreFor(mode, 'B', 'B', TOTAL_CELLS),
+  max: roundScoreFor(mode, 'B', 'B', MIN_WIN_MOVES),
+});
 
 /** Outcome of the round held in `state` (meaningful once it is won / drawn). */
 export const stateOutcome = (state: GameState): RunOutcome =>
