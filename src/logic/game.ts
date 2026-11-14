@@ -192,6 +192,10 @@ export const advanceGame = (state: GameState, action: GameAction, ctx: AdvanceCo
       return tryPlace(state, idx, aiStone);
     }
 
+    case 'finish':
+      // Finish early: the running round ends without a winner and scores nothing.
+      return state.status === 'playing' || state.status === 'paused' ? { ...state, status: 'finished' } : state;
+
     case 'newRound': {
       // Loser-goes-first: after a decided round the loser opens the next one;
       // after a draw or an abandoned round the opener alternates.
@@ -241,6 +245,7 @@ export const arcadeStatusOf = (status: GameStatus): ArcadeStatus => {
       return 'paused';
     case 'won':
     case 'draw':
+    case 'finished':
       return 'gameOver';
   }
 };

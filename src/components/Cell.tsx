@@ -90,7 +90,7 @@ export const Cell = memo(function Cell({
           <Piece value={value} iconStyle={iconStyle} />
         </span>
       )}
-      {isLastMove && value !== null && <span className={styles.lastMarker} aria-hidden="true" />}
+      {isLastMove && value !== null && <span className={styles.lastMarker} data-last-move="ring" aria-hidden="true" />}
     </button>
   );
 });

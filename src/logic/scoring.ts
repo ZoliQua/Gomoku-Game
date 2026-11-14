@@ -37,4 +37,4 @@ export const roundScoreFor = (
 
 /** Outcome of the round held in `state` (meaningful once it is won / drawn). */
 export const stateOutcome = (state: GameState): RunOutcome =>
-  outcomeOf(state.mode, state.humanStone, state.status === 'won' ? state.winner : null);
+  state.status === 'finished' ? 'finished' : outcomeOf(state.mode, state.humanStone, state.status === 'won' ? state.winner : null);

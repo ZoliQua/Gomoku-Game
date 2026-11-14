@@ -6,9 +6,10 @@ export type WinningLine = readonly number[];
 
 /**
  * Round lifecycle. `idle` only before the very first round of a fresh match;
- * `paused` freezes input, the AI and the timer; `won` / `draw` end the round.
+ * `paused` freezes input, the AI and the timer; `won` / `draw` end the round;
+ * `finished` is a round the player ended early with Finish (no winner, score 0).
  */
-export type GameStatus = 'idle' | 'playing' | 'paused' | 'won' | 'draw';
+export type GameStatus = 'idle' | 'playing' | 'paused' | 'won' | 'draw' | 'finished';
 
 export type Mode = 'pvp' | 'easy' | 'medium' | 'hard';
 
@@ -47,6 +48,7 @@ export type GameAction =
   | { type: 'resume' }
   | { type: 'place'; index: number }
   | { type: 'aiMove' }
+  | { type: 'finish' }
   | { type: 'newRound' }
   | { type: 'changeMode'; mode: Mode }
   | { type: 'resetMatch' }

@@ -19,7 +19,8 @@ export type GomokuMessageKey =
   | 'sound' | 'on' | 'off'
   | 'board' | 'cellEmpty' | 'cellPiece' | 'blackStone' | 'whiteStone' | 'blackTooth' | 'whiteTooth'
   | 'kbdSpace'
-  | 'keyMove' | 'keyPlace' | 'keyPause' | 'keyNewRound' | 'keyMode' | 'keyIcons' | 'keyReset';
+  | 'keyMove' | 'keyPlace' | 'keyPause' | 'keyNewRound' | 'keyMode' | 'keyIcons' | 'keyReset'
+  | 'touchTap' | 'touchTapAction' | 'touchRing' | 'touchRingAction' | 'rulesDiagramLabel' | 'rulesDiagramCaption' | 'rulesGoal' | 'rulesPlayKeys' | 'rulesPlayTouch' | 'rulesRulesBoard' | 'rulesRulesOrder' | 'rulesRulesSave' | 'rulesScoringText' | 'rulesDentalText' | 'rulesMobileTap' | 'rulesMobileRing' | 'rulesMobileFs';
 
 export const MESSAGES: Messages<GomokuMessageKey> = {
   en: {
@@ -93,6 +94,23 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     keyMode: 'Cycle / pick mode',
     keyIcons: 'Dental mode (stones ↔ teeth)',
     keyReset: 'Reset match',
+    touchTap: 'Tap an intersection',
+    touchTapAction: 'Place a stone',
+    touchRing: 'Ringed stone',
+    touchRingAction: 'Last move',
+    rulesDiagramLabel: 'Diagram: five black stones in a row on the board, marked with a check mark.',
+    rulesDiagramCaption: 'Five in a row wins',
+    rulesGoal: 'Be the first to line up five of your stones in a row — across, down or diagonally — on the {size} × {size} board.',
+    rulesPlayKeys: 'Move the cursor with the arrow keys or WASD and place a stone with Space or Enter. P or Esc pauses, R starts a new round, N or 1–4 picks the mode, I switches stones and teeth, C resets the match.',
+    rulesPlayTouch: 'Tap an intersection to place your stone. A ringed stone marks the last move. The buttons below the board start a new round, change the mode or reset the match.',
+    rulesRulesBoard: 'Black (you) moves first; players alternate. Five or more stones in a row win (free Gomoku: six or more count too).',
+    rulesRulesOrder: 'After a decided round the loser opens the next one; after a draw or an abandoned round the opener alternates.',
+    rulesRulesSave: 'Your match is autosaved, so you can leave and continue later. Two-player (PvP) rounds are unranked.',
+    rulesScoringText: 'A win against the AI pays {min} (Easy), {mid} (Medium) or {max} (Hard) points — the emptier the board when you win, the more you get. A draw pays a quarter of the base. Finish early ranks the round score you have now, which is 0 while a round is still in play.',
+    rulesDentalText: 'Dental mode only changes the look: black stones become molars, white stones incisors. Rules and scoring stay the same.',
+    rulesMobileTap: 'Tap the exact intersection you want; the board fills the width of the screen.',
+    rulesMobileRing: 'The stone with a ring around it is the last move.',
+    rulesMobileFs: 'The "Full screen" button hides the browser bars.',
   },
   hu: {
     subStone: 'Öt egy sorban a 15 × 15-ös táblán — billentyűzettel is.',
@@ -165,6 +183,23 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     keyMode: 'Mód léptetése / választása',
     keyIcons: 'Fogas mód (kövek ↔ fogak)',
     keyReset: 'Meccs nullázása',
+    touchTap: 'Koppintás egy metszéspontra',
+    touchTapAction: 'Kő lerakása',
+    touchRing: 'Gyűrűs kő',
+    touchRingAction: 'Az utolsó lépés',
+    rulesDiagramLabel: 'Ábra: öt fekete kő egy sorban a táblán, pipával jelölve.',
+    rulesDiagramCaption: 'Öt egy sorban nyer',
+    rulesGoal: 'Rakj le elsőként öt követ egy sorban – vízszintesen, függőlegesen vagy átlósan – a {size} × {size}-es táblán.',
+    rulesPlayKeys: 'A kurzort a nyílbillentyűkkel vagy WASD-vel mozgathatod, követ Szóközzel vagy Enterrel teszel le. P vagy Esc szünetel, R új kört indít, N vagy 1–4 módot választ, I a kövek és fogak között vált, C újraindítja a meccset.',
+    rulesPlayTouch: 'Koppints egy metszéspontra a köved lerakásához. A gyűrűs kő az utolsó lépést jelöli. A tábla alatti gombokkal új kört indíthatsz, módot válthatsz vagy újrakezdheted a meccset.',
+    rulesRulesBoard: 'A fekete (te) kezd, utána felváltva léptek. Öt vagy több kő egy sorban nyer (szabad gomoku: a hat vagy több is számít).',
+    rulesRulesOrder: 'Eldőlt kör után a vesztes kezd a következőben; döntetlen vagy félbehagyott kör után a kezdő fél váltakozik.',
+    rulesRulesSave: 'A meccsed automatikusan mentődik, így később folytathatod. A kétszemélyes (PvP) körök nem rangsorolt játékok.',
+    rulesScoringText: 'Egy gép elleni győzelem {min} (könnyű), {mid} (közepes) vagy {max} (nehéz) pontot ér – minél üresebb a tábla a győzelemkor, annál több pont jár. A döntetlen az alap negyedét éri. Az idő előtti befejezés a kör jelenlegi pontszámát rangsorolja, ami 0, amíg a kör még folyik.',
+    rulesDentalText: 'A fogas mód csak a megjelenést változtatja: a fekete kövek zápfogak, a fehérek metszőfogak lesznek. A szabályok és a pontozás ugyanazok maradnak.',
+    rulesMobileTap: 'Pontosan arra a metszéspontra koppints, amelyiket szeretnéd; a tábla kitölti a képernyő szélességét.',
+    rulesMobileRing: 'A gyűrűvel körbevett kő az utolsó lépés.',
+    rulesMobileFs: 'A „Teljes képernyő” gomb eltünteti a böngészősávokat.',
   },
   de: {
     subStone: 'Fünf in einer Reihe auf einem 15 × 15-Goban — voll per Tastatur spielbar.',
@@ -237,6 +272,23 @@ export const MESSAGES: Messages<GomokuMessageKey> = {
     keyMode: 'Modus wechseln / wählen',
     keyIcons: 'Zahnmodus (Steine ↔ Zähne)',
     keyReset: 'Partie zurücksetzen',
+    touchTap: 'Kreuzung antippen',
+    touchTapAction: 'Stein setzen',
+    touchRing: 'Stein mit Ring',
+    touchRingAction: 'Letzter Zug',
+    rulesDiagramLabel: 'Diagramm: fünf schwarze Steine in einer Reihe auf dem Brett, mit einem Häkchen markiert.',
+    rulesDiagramCaption: 'Fünf in einer Reihe gewinnt',
+    rulesGoal: 'Bilde zuerst fünf eigene Steine in einer Reihe – waagerecht, senkrecht oder diagonal – auf dem {size} × {size}-Brett.',
+    rulesPlayKeys: 'Bewege den Cursor mit den Pfeiltasten oder WASD und setze einen Stein mit Leertaste oder Enter. P oder Esc pausiert, R startet eine neue Runde, N oder 1–4 wählt den Modus, I wechselt zwischen Steinen und Zähnen, C setzt das Match zurück.',
+    rulesPlayTouch: 'Tippe auf eine Kreuzung, um deinen Stein zu setzen. Ein Stein mit Ring zeigt den letzten Zug. Mit den Knöpfen unter dem Brett startest du eine neue Runde, wechselst den Modus oder setzt das Match zurück.',
+    rulesRulesBoard: 'Schwarz (du) beginnt, danach wechselt ihr euch ab. Fünf oder mehr Steine in einer Reihe gewinnen (freies Gomoku: auch sechs oder mehr zählen).',
+    rulesRulesOrder: 'Nach einer entschiedenen Runde beginnt der Verlierer die nächste; nach einem Unentschieden oder einer abgebrochenen Runde wechselt der Beginn.',
+    rulesRulesSave: 'Dein Match wird automatisch gespeichert, du kannst also später weitermachen. Zwei-Spieler-Runden (PvP) werden nicht gewertet.',
+    rulesScoringText: 'Ein Sieg gegen die KI bringt {min} (Leicht), {mid} (Mittel) oder {max} (Schwer) Punkte – je leerer das Brett beim Sieg, desto mehr. Ein Unentschieden bringt ein Viertel der Basis. „Beenden“ wertet die aktuelle Rundenpunktzahl, die 0 ist, solange die Runde noch läuft.',
+    rulesDentalText: 'Der Zahnmodus ändert nur das Aussehen: Schwarze Steine werden zu Backenzähnen, weiße zu Schneidezähnen. Regeln und Punktewertung bleiben gleich.',
+    rulesMobileTap: 'Tippe genau auf die gewünschte Kreuzung; das Brett füllt die Bildschirmbreite.',
+    rulesMobileRing: 'Der Stein mit einem Ring drumherum ist der letzte Zug.',
+    rulesMobileFs: 'Der Knopf „Vollbild“ blendet die Browserleisten aus.',
   },
 };
 

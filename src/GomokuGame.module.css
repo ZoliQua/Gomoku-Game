@@ -34,6 +34,13 @@
   flex: 1;
 }
 
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .reset {
   width: 100%;
   margin-top: 8px;
@@ -85,6 +92,12 @@
 
 @media (max-width: 880px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Bleed past the page gutter so the board can use the whole screen width. */
+  .boardWrap {
+    width: min(100vw, 640px);
+    margin-inline: calc(50% - min(50vw, 320px));
+    justify-self: stretch;
   }
 }
